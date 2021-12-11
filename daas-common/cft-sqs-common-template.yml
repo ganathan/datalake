@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Common SQS Queue Cloudformation Template
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  CostCenter:
+    Type: String
+    Default: 55100
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  Name:
+    Type: String
+  QueueType:
+    Type: String
+    Default: standard
+    AllowedValues: [fifo, standard]
+  DLQMaxReceiveCount:
+    Type: String
+    Default: 10
+  MaximumMessageSize:
+    Type: String
+    Default: 262144
+  MessageRetentionPeriod:
+    Type: String
+    Default: 576
+  EnableDLQ:
+    Type: String
+    Default: false
+    AllowedValues: [true, false]
+  Project:
+    Type: String
+    Default: daas
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+
+Conditions:
+  isFifo: !Equals [ !Ref QueueType, 'fifo']
+  isDLQEnabled: !Equals [ !Ref EnableDLQ, 'true']
+
+Resources:
+  CreateSQSQueueCreation:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      MaximumMessageSize: !Sub ${MaximumMessageSize}
+      MessageRetentionPeriod: !Sub ${MessageRetentionPeriod}
+      QueueName: !If
+          - isFifo
+          - !Sub ${Name}-${Environment}.${QueueType}
+          - !Sub ${Name}-${Environment}
+      ReceiveMessageWaitTimeSeconds: 5
+      RedrivePolicy: !If
+          - isDLQEnabled
+          -
+            deadLetterTargetArn:
+              Fn::GetAtt:
+                - "CreateDeadLetterQueue"
+                - "Arn"
+            maxReceiveCount: !Ref DLQMaxReceiveCount
+          - !Ref "AWS::NoValue"
+      Tags :
+          - Key: Application
+            Value: !Ref Application
+          - Key: CostCenter
+            Value: !Ref CostCenter
+          - Key: Environment
+            Value: !Ref Environment
+          - Key: Name
+            Value: !Ref Name
+          - Key: Project
+            Value: !Ref Project
+          - Key: Support
+            Value: !Ref Support
+      VisibilityTimeout: 120
+
+  CreateDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Condition: isDLQEnabled
+    Properties:
+      FifoQueue: !If
+          - isFifo
+          - true
+          - false
+      QueueName: !If
+          - isFifo
+          - !Sub ${Name}-${Environment}-dlq.${QueueType}
+          - !Sub ${Name}-${Environment}-dlq
+      Tags :
+          - Key: Application
+            Value: !Ref Application
+          - Key: CostCenter
+            Value: !Ref CostCenter
+          - Key: Environment
+            Value: !Ref Environment
+          - Key: Name
+            Value: !Ref Name
+          - Key: Project
+            Value: !Ref Project
+          - Key: Support
+            Value: !Ref Support
+
+Outputs:
+  SQSQueueName:
+    Value: !Ref CreateSQSQueueCreation
+    Export:
+      Name: !Sub '${Name}-${Environment}'
+  S3QueueArn:
+    Value: !GetAtt CreateSQSQueueCreation.Arn
+    Export:
+      Name: !Sub '${Name}-${Environment}-arn'

@@ -5,7 +5,7 @@ and reused across multiple applications/projects.
 This facitilites governance and allows to establish standards across services.
 
 1) deploy-template (.bat/.sh)
-Copies the common deployment file to the common s3 folder. This file takes 4 Parameters - Enity, Environment, Region and Service Type. Running this will
+Copies the common deployment file to the common s3 folder. This file takes 5 Parameters - Enity, Account Id, Environment, Region and Service Type. Running this will
 ensure the latest file in the local drive is uploaded to the common folder.
 
 2) cft-"Service Type"-common-template.yml (NOTE: Service Type)
@@ -18,13 +18,13 @@ on all deployed service for the given environment.
 Steps for deploying:
 --------------------
 1) Open command prompt and execute the deploy-template file. 
-Example Syntax: "deploy-template.bat myorg dev us-west-2 vpc" (windows) "./deploy-template.sh myorg dev us-west-2 vpc" (linux/mac)
+Example Syntax: "deploy-template.bat myorg myaccountid dev us-west-2 vpc" (windows) "./deploy-template.sh myorg myaccountid dev us-west-2 vpc" (linux/mac)
 The above example is for deploying a VPC in the AWS Account. The same syntax is for all aws services.
 
 Steps for updating:
 -------------------
 1) Open the cft-"service type"-common-template.yml file in your favorite text editor and make the necessary change.
-2) Run the deploy-template batch file providing the entity, environment, region and service type.
+2) Run the deploy-template batch file providing the entity, account id, environment, region and service type.
 
 Steps for cloning:
 ------------------

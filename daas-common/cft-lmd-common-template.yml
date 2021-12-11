@@ -1,0 +1,287 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Common Lambda Cloudformation Template
+
+Mappings:
+  SecurityGroups:
+    us-west-2:
+      dev: sg-00971eb13d7588d70
+      tst: sg-00971eb13d7588d70
+      prd: sg-891852d6
+      poc: sg-07f0c0f6466541460
+      uat: sg-00971eb13d7588d70
+  SubnetId:
+    us-west-2:
+      dev:
+        - subnet-191bd544
+      tst:
+        - subnet-191bd544
+      prd:
+        - subnet-0e3ea1c37d75e2a59
+        - subnet-0190df93ba02e8745
+        - subnet-079a7c43754dc8196
+        - subnet-04bf6dfa278f40430
+      poc:
+        - subnet-01500147167f431fa
+        - subnet-06a9c5988ea75f87d
+      uat:
+        - subnet-191bd544
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: 55100
+  Description:
+    Type: String
+  EnablePandasLayer:
+    Type: String
+    Default: false
+  EnableOpenPyXmlLayer:
+    Type: String
+    Default: false
+  EnableSciPyLayer:
+    Type: String
+    Default: false
+  EnablePsycopg2Layer:
+    Type: String
+    Default: false
+  EnablePyArrowLayer:
+    Type: String
+    Default: false
+  EnablePyMysqlLayer:
+    Type: String
+    Default: false
+  EnablePyMsSQLLayer:
+    Type: String
+    Default: false
+  EnablePyOdbcLayer:
+    Type: String
+    Default: false
+  EnableVpcConfig:
+    Type: String
+    Default: true
+  EnableXmlToDictLayer:
+    Type: String
+    Default: false
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  HandlerName:
+    Type: String
+  LambdaCompressedFileName:
+    Type: String
+  LambdaEnvVarFileName:
+    Type: String
+    Default: template/daas-client1-cft-lmd-common-env-var.yml
+  MemorySize:
+    Type: String
+    Default: 128
+  Name:
+    Type: String
+  ProgrammingLanguage:
+    Type: String
+    Default: python3.8
+  Project:
+    Type: String
+    Default: daas
+  S3EventTriggerArn:
+    Type: String
+    Default: false
+  SecurityGroupId:
+    Type: String
+    Default: false
+  SqsEventTriggerArn:
+    Type: String
+    Default: false
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+  Timeout:
+    Type: String
+    Default: 60
+
+
+Conditions:
+  isPsycopg2LayerEnabled: !Equals [!Ref EnablePsycopg2Layer, true]
+  isPyArrowLayerEnabled: !Equals [!Ref EnablePyArrowLayer, true]
+  isPyMysqlLayerEnabled: !Equals [!Ref EnablePyMysqlLayer, true]
+  isPyMssqlLayerEnabled: !Equals [!Ref EnablePyMsSQLLayer, true]
+  isPyOdbcLayerEnabled: !Equals [!Ref EnablePyOdbcLayer, true]
+  isPandasLayerEnabled: !Equals [!Ref EnablePandasLayer, true]
+  isOpenPyXmlLayerEnabled: !Equals [!Ref EnableOpenPyXmlLayer, true]
+  isSciPyLayerEnabled: !Equals [!Ref EnableSciPyLayer, true]
+  isXmlToDictLayerEnabled: !Equals [!Ref EnableXmlToDictLayer, true]
+  isUSWest: !Equals [!Ref "AWS::Region", "us-west-2"]
+  isLambdaS3EventEnabled: !Not [ !Equals [!Ref S3EventTriggerArn, false] ]
+  isLambdaSQSEventEnabled: !Not [ !Equals [!Ref SqsEventTriggerArn, false] ]
+  isVpcConfigEnabled: !Equals [!Ref EnableVpcConfig, true]
+  isSecurityGroupEnabled: !Not [ !Equals [!Ref SecurityGroupId, false] ]
+
+Resources:
+  CreateLambda:
+    Type: AWS::Lambda::Function
+    Properties :
+        Code :
+            S3Bucket: !Sub ${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}
+            S3Key: !Sub lmd/scripts/deploy/${LambdaCompressedFileName}
+        Description : !Ref Description
+        FunctionName : !Ref Name
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location:
+              Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/${LambdaEnvVarFileName}'
+        Handler : !Ref HandlerName
+        MemorySize : !Ref MemorySize
+        Role: !GetAtt LambdaRole.Arn
+        Runtime : !Ref ProgrammingLanguage
+        Layers:
+          - !If
+            - isPyMysqlLayerEnabled
+            - Fn::ImportValue:
+                !Sub "${Entity}-lmdlyr-pymysql-${Environment}-arn"
+            - !Ref "AWS::NoValue"
+          - !If
+            - isPyOdbcLayerEnabled
+            - Fn::ImportValue:
+                !Sub "{Entity}-lmdlyr-pyodbc-${Environment}-arn"
+            - !Ref "AWS::NoValue"
+          - !If
+            - isPyArrowLayerEnabled
+            - Fn::ImportValue:
+                !Sub "{Entity}-lmdlyr-pyarrow-${Environment}-arn"
+            - !Ref "AWS::NoValue"
+          - !If
+            - isPsycopg2LayerEnabled
+            - Fn::ImportValue:
+                !Sub "{Entity}-lmdlyr-psycopg2-${Environment}-arn"
+            - !Ref "AWS::NoValue"
+          - !If
+            - isPandasLayerEnabled
+            - arn:aws:lambda:us-west-2:770693421928:layer:Klayers-python38-pandas:43
+            - !Ref "AWS::NoValue"
+          - !If
+            - isOpenPyXmlLayerEnabled
+            - arn:aws:lambda:us-west-2:770693421928:layer:Klayers-python38-openpyxl:9
+            - !Ref "AWS::NoValue"
+          - !If
+            - isSciPyLayerEnabled
+            - !Sub "arn:aws:lambda:us-west-2:${AWS::AccountId}:layer:AWSLambda-Python38-SciPy1x:29"
+            - !Ref "AWS::NoValue"
+          - !If
+            - isXmlToDictLayerEnabled
+            - Fn::ImportValue:
+                !Sub "{Entity}-lmdlyr-xmltodict-${Environment}-arn"
+            - !Ref "AWS::NoValue"
+        Tags:
+            - Key: Application
+              Value: !Ref Application
+            - Key: CostCenter
+              Value: !Ref CostCenter
+            - Key: Entity
+              Value: !Ref Entity
+            - Key: Environment
+              Value: !Ref Environment
+            - Key: Name
+              Value: !Ref Name
+            - Key: Project
+              Value: !Ref Project
+            - Key: Support
+              Value: !Ref Support
+        Timeout : !Ref Timeout
+        VpcConfig :
+            SubnetIds: !FindInMap [SubnetId, !Ref "AWS::Region", !Ref "Environment" ]
+            SecurityGroupIds:
+              - !FindInMap [SecurityGroups, !Ref 'AWS::Region', !Ref Environment]
+
+
+  CreateDaaSLambdaSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable daas common lambda security group
+      GroupName: !Sub ${Entity}-lmd-common-sec-grp-${Environment}
+      VpcId: !ImportValue
+        Fn::Sub: "${Entity}-vpc-${Environment}-vpc"
+
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub rle-${Name}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - events.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub ${Entity}-plc-common-lamdba
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Sid: "VPCaccess"
+                Effect: "Allow"
+                Action:
+                  - "ec2:DescribeInstances"
+                  - "ec2:CreateNetworkInterface"
+                  - "ec2:AttachNetworkInterface"
+                  - "ec2:DescribeNetworkInterfaces"
+                  - "ec2:DeleteNetworkInterface"
+                Resource: "*"
+              -
+                Sid: "Xrayaccess"
+                Effect: "Allow"
+                Action:
+                  - "xray:PutTraceSegments"
+                  - "xray:PutTelemetryRecords"
+                Resource: "*"
+              -
+                Sid: "CloudWatchaccess"
+                Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+
+  LambdaEventS3Permission:
+    Type: AWS::Lambda::Permission
+    Condition: isLambdaS3EventEnabled
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref CreateLambda
+      Principal: s3.amazonaws.com
+      SourceArn: !Ref S3EventTriggerArn
+      SourceAccount: !Sub ${AWS::AccountId}
+
+  LambdaEventSqsSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: isLambdaSQSEventEnabled
+    Properties:
+      BatchSize: 10
+      Enabled: true
+      EventSourceArn: !Ref SqsEventTriggerArn
+      FunctionName: !GetAtt CreateLambda.Arn
+
+Outputs:
+  LamdbaFunctionARN:
+    Value: !GetAtt CreateLambda.Arn
+    Export:
+      Name: !Sub '${Name}-ARN'
+  LambdaRole:
+    Value: !Ref LambdaRole
+    Export:
+      Name: !Sub '${Name}-Role'

@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS S3 Bucket Common Template
+
+Parameters:
+  AccessControl:
+    Type: String
+    Default: BucketOwnerFullControl
+  Application:
+    Type: String
+    Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: 55100
+  DataClassification:
+    Type: String
+    Default: Internal
+    AllowedValues: [Public, Internal, Confidential, Highly Confidential]
+  EncryptionImportKey:
+    Type: String
+    Default: false
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  EventLambdaArn:
+    Type: String
+    Default: false
+  EventQueueArn:
+    Type: String
+    Default: false
+  Name:
+    Type: String
+  Project:
+    Type: String
+    Default: daas
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+
+# check KMS Key, as it will accept only KMS key generated and exported via CF template.
+Conditions:
+  HasBucketEncryptionKey: !Not [!Equals [!Ref EncryptionImportKey, false]]
+  HasEventQueueArn: !Not [!Equals [!Ref EventQueueArn, false]]
+  HasEventLambdaArn: !Not [!Equals [!Ref EventLambdaArn, false]]
+
+Resources:
+  CreateS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub '${Name}-${Environment}'
+      AccessControl: !Ref AccessControl
+      BucketEncryption: !If
+        - HasBucketEncryptionKey
+        - ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID: !ImportValue
+                  Ref: EncryptionImportKey
+                SSEAlgorithm: 'aws:kms'
+        - !Ref 'AWS::NoValue'
+      NotificationConfiguration: !If
+        - HasEventQueueArn
+        - QueueConfigurations:
+            - Event: 's3:ObjectCreated:*'
+              Queue: !Ref EventQueueArn
+        - !Ref 'AWS::NoValue'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Data Classification
+          Value: !Ref DataClassification
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Name}-${Environment}'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+Outputs:
+  S3BucketName:
+    Value: !Ref CreateS3Bucket
+    Export:
+      Name: !Sub '${Name}-${Environment}'
+  S3BucketArn:
+    Value: !GetAtt CreateS3Bucket.Arn
+    Export:
+      Name: !Sub '${Name}-${Environment}-Arn'

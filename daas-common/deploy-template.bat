@@ -7,21 +7,28 @@ if [%4]==[] goto usage
 
 REM Set variables
 SET entity=%1
-SET environment=%2
-SET region=%3
-SET serviceType=%4
-SET stackName=cft-%serviceType%-common-template
-SET commonS3Folder=%entity%-s3-%region%-common-artifacts-%environment%
+SET accountId=%2
+SET environment=%3
+SET region=%4
+SET serviceType=%5
+SET stackName=cft-%serviceType%-common
+SET commonS3Folder=%entity%-s3-%accountId%-%region%-common-artifacts-%environment%
 
 
 REM Copy the Stack to the common deploy folder
-call aws s3 cp .\%stackName%.yml ^
-   s3://%commonS3Folder%/%serviceType%/scripts/template/%stackName%.yml
+call aws s3 cp .\%stackName%-template.yml ^
+   s3://%commonS3Folder%/%serviceType%-template/scripts/template/%stackName%-template.yml
+goto eof
+
+REM Copy the lamdba environment variable to the common deploy folder
+if serviceType==lmd
+   call aws s3 cp .\%stackName%-env-var.yml ^
+      s3://%commonS3Folder%/%objectType%/scripts/template/%stackName%-env-var.yml
 goto eof
 
 :usage
 @echo ERROR: Missing Required Parameters! Please see below the syntax to execute this batch file.
-@echo USAGE: "%0 <entity> <environment> <region> <service type>"
+@echo USAGE: "%0 <entity> <account id> <environment> <region> <service type>"
 
 :eof
 @echo Done!
