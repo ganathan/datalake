@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC for data lake as a service - core (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+     Type: String
+     Default: dev
+     AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateVPCForDaaS:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Environment: !Ref Environment
+        Name: !Sub ${Entity}-vpc-${Environment}
+        PrivateSubnet1Cidr: 10.31.0.0/24
+        PrivateSubnet2Cidr: 10.31.32.0/24
+        PrivateSubnet1AZ: us-west-2d
+        PrivateSubnet2AZ: us-west-2c
+        PublicSubnet1Cidr: 10.31.16.0/24
+        PublicSubnet2Cidr: 10.31.48.0/24
+        PublicSubnet1AZ: us-west-2a
+        PublicSubnet2AZ: us-west-2b
+        VpcCidrBlock: 10.31.0.0/16
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/vpc/scripts/template/cft-vpc-common-template.yml
+      TimeoutInMinutes: '60'
