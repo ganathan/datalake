@@ -1,0 +1,562 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'VPC Common CloudFormation Stack'
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: personal
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  PrivateSubnet1Cidr:
+    Type: String
+    Default: false
+  PrivateSubnet2Cidr:
+    Type: String
+    Default: false
+  PrivateSubnet1AZ:
+    Type: String
+    Default: us-west-2d
+  PrivateSubnet2AZ:
+    Type: String
+    Default: us-west-2c
+  Project:
+    Type: String
+    Default: daas
+  PublicSubnet1Cidr:
+    Type: String
+    Default: false
+  PublicSubnet2Cidr:
+    Type: String
+    Default: false
+  PublicSubnet1AZ:
+    Type: String
+    Default: us-west-2a
+  PublicSubnet2AZ:
+    Type: String
+    Default: us-west-2b
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+  VpcCidrBlock:
+    Type: String
+    Default: 10.31.0.0/16
+
+Mappings:
+  RegionMap:
+    us-west-2:
+     "AMI": "ami-0518bb0e75d3619ca"
+
+Conditions:
+  isPublicSubnet1Needed: !Not [!Equals [!Ref PublicSubnet1Cidr, false]]
+  isPublicSubnet2Needed: !Not [!Equals [!Ref PublicSubnet2Cidr, false]]
+  isPrivateSubnet1Needed: !Not [!Equals [!Ref PrivateSubnet1Cidr, false]]
+  isPrivateSubnet2Needed: !Not [!Equals [!Ref PrivateSubnet2Cidr, false]]
+
+Resources:
+  CreateVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity        
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Ref Entity-vpc
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreateVpcCidrBlock:
+    Type: 'AWS::EC2::VPCCidrBlock'
+    Properties:
+      AmazonProvidedIpv6CidrBlock: true
+      VpcId: !Ref CreateVPC
+
+  CreateInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-Internet-gateway'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  AssociateIGWToVPC:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref CreateInternetGateway
+      VpcId: !Ref CreateVPC
+
+  CreatePublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Condition: isPublicSubnet1Needed
+    DependsOn: CreateVpcCidrBlock
+    Properties:
+      VpcId: !Ref CreateVPC
+      AvailabilityZone: !Ref PublicSubnet1AZ
+      CidrBlock: !Ref PublicSubnet1Cidr
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-public-subnet-1'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Condition: isPublicSubnet2Needed
+    DependsOn: CreateVpcCidrBlock
+    Properties:
+      VpcId: !Ref CreateVPC
+      AvailabilityZone: !Ref PublicSubnet2AZ
+      CidrBlock: !Ref PublicSubnet2Cidr
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-public-subnet-2'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Condition: isPrivateSubnet1Needed
+    DependsOn: CreateVpcCidrBlock
+    Properties:
+      VpcId: !Ref CreateVPC
+      AvailabilityZone: !Ref PrivateSubnet1AZ
+      CidrBlock: !Ref PrivateSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-private-subnet-1'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Condition: isPrivateSubnet2Needed
+    DependsOn: CreateVpcCidrBlock
+    Properties:
+      VpcId: !Ref CreateVPC
+      AvailabilityZone: !Ref PrivateSubnet2AZ
+      CidrBlock: !Ref PrivateSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-private-subnet-2'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePublic1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: isPublicSubnet1Needed
+    Properties:
+      VpcId: !Ref CreateVPC
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-public1-route'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePublic2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: isPublicSubnet2Needed
+    Properties:
+      VpcId: !Ref CreateVPC
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Entity
+          Value: !Ref Entity
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Enity}-public2-route'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePrivate1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: isPrivateSubnet1Needed
+    Properties:
+      VpcId: !Ref CreateVPC
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity 
+        - Key: Entity
+          Value: !Ref Entity
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Enity}-private1-route'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePrivate2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: isPrivateSubnet2Needed
+    Properties:
+      VpcId: !Ref CreateVPC
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-private2-route'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CreatePublic1RouteTable
+      SubnetId: !Ref CreatePublicSubnet1
+
+  CreatePublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CreatePublic2RouteTable
+      SubnetId: !Ref CreatePublicSubnet2
+
+  CreatePrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CreatePrivate1RouteTable
+      SubnetId: !Ref CreatePrivateSubnet1
+
+  CreatePrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CreatePrivate2RouteTable
+      SubnetId: !Ref CreatePrivateSubnet2
+
+  CreatePublic1InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AssociateIGWToVPC
+    Properties:
+      RouteTableId: !Ref CreatePublic1RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref CreateInternetGateway
+
+  CreatePublic2InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AssociateIGWToVPC
+    Properties:
+      RouteTableId: !Ref CreatePublic2RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref CreateInternetGateway
+
+  CreateNetworkACLPublic:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref CreateVPC
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-nacl-public'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreateNetworkACLPrivate:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref CreateVPC
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Entity}-nacl-private'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreatePublicSubnet1NaclAssoc:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref CreatePublicSubnet1
+      NetworkAclId: !Ref CreateNetworkACLPublic
+
+  CreatePublicSubnet2NaclAssoc:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref CreatePublicSubnet2
+      NetworkAclId: !Ref CreateNetworkACLPublic
+
+  CreatePrivateSubnet1NaclAssoc:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref CreatePrivateSubnet1
+      NetworkAclId: !Ref CreateNetworkACLPrivate
+
+  CreatePrivateSubnet2NaclAssoc:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref CreatePrivateSubnet2
+      NetworkAclId: !Ref CreateNetworkACLPrivate
+
+  CreateNaclEntryInPublic:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref CreateNetworkACLPublic
+      RuleNumber: 99
+      Protocol: -1
+      RuleAction: allow
+      Egress: false
+      CidrBlock: 0.0.0.0/0
+
+  CreateNaclEntryOutPublic:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref CreateNetworkACLPublic
+      RuleNumber: 99
+      Protocol: -1
+      RuleAction: allow
+      Egress: true
+      CidrBlock: 0.0.0.0/0
+
+  CreateNaclEntryInPrivate:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref CreateNetworkACLPrivate
+      RuleNumber: 99
+      Protocol: -1
+      RuleAction: allow
+      Egress: false
+      CidrBlock: 0.0.0.0/0
+
+  CreateNaclEntryOutPrivate:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref CreateNetworkACLPrivate
+      RuleNumber: 99
+      Protocol: -1
+      RuleAction: allow
+      Egress: true
+      CidrBlock: 0.0.0.0/0
+
+Outputs:
+  VpcStackName:
+    Description: VPC Stack Name
+    Value: !Sub '${AWS::StackName}'
+    Export:
+      Name: !Sub '${Entity}-vpc-stack-name'
+  Vpc:
+    Description: Vpc
+    Value: !Ref CreateVPC
+    Export:
+      Name: !Sub '${Enitty}-vpc'
+  InternetGateway:
+    Description: Internet Gateway
+    Value: !Ref CreateInternetGateway
+    Export:
+      Name: !Sub '${Entity}-igw'
+  PubSubnetId1:
+    Condition: isPublicSubnet1Needed
+    Description: Public Subnet 1
+    Value: !Ref CreatePublicSubnet1
+    Export:
+      Name: !Sub '${Entity}-public-subnet-1'
+  PubSubnetId2:
+    Condition: isPublicSubnet2Needed
+    Description: Public Subnet 2
+    Value: !Ref CreatePublicSubnet2
+    Export:
+      Name: !Sub '${Entity}-public-subnet-2'
+  PubSubnets:
+    Condition: isPublicSubnet1Needed
+    Description: Public subnets for the vpc
+    Value: !Join [',', [!Ref CreatePublicSubnet1, !Ref CreatePublicSubnet2]]
+    Export:
+      Name: !Sub '${Entity}-public-subnets'
+  PrivSubnetId1:
+    Condition: isPrivateSubnet1Needed
+    Description: Private Subnet 1
+    Value: !Ref CreatePrivateSubnet1
+    Export:
+      Name: !Sub '${Entity}-private-subnet-1'
+  PrivSubnetId2:
+    Condition: isPrivateSubnet2Needed
+    Description: Private Subnet 2
+    Value: !Ref CreatePrivateSubnet2
+    Export:
+      Name: !Sub '${Entity}-private-subnet-2'
+  PrivSubnets:
+    Condition: isPrivateSubnet1Needed
+    Description: Private subnets for the vpc
+    Value: !Join [',', [!Ref CreatePrivateSubnet1, !Ref CreatePrivateSubnet2]]
+    Export:
+      Name: !Sub '${Entity}-private-subnets'
+  PrivRoutTable1:
+    Condition: isPrivateSubnet1Needed
+    Description: Private Route Table 1
+    Value: !Ref CreatePrivate1RouteTable
+    Export:
+      Name: !Sub '${Entity}-private-route-table-1'
+  PrivRoutTable2:
+    Condition: isPrivateSubnet2Needed
+    Description: Private Route Table 2
+    Value: !Ref CreatePrivate2RouteTable
+    Export:
+      Name: !Sub '${Entity}-private-route-table-2'
+  PrivRoutTables:
+    Condition: isPrivateSubnet1Needed
+    Description: Private Route Tables for the vpc
+    Value: !Join [',', [!Ref CreatePrivate1RouteTable, !Ref CreatePrivate2RouteTable]]
+    Export:
+      Name: !Sub '${Entity}-private-route-tables'
+  PubRoutTable1:
+    Condition: isPublicSubnet1Needed
+    Description: Public Route Table 1
+    Value: !Ref CreatePublic1RouteTable
+    Export:
+      Name: !Sub '${Entity}-public-route-table-1'
+  PubRoutTable2:
+    Condition: isPublicSubnet2Needed
+    Description: Public Route Table 2
+    Value: !Ref CreatePublic2RouteTable
+    Export:
+      Name: !Sub '${Entity}-public-route-table-2'
+  PubRoutTables:
+    Condition: isPublicSubnet1Needed
+    Description: Public Route Tables for the vpc
+    Value: !Join [',', [!Ref CreatePublic1RouteTable, !Ref CreatePublic2RouteTable]]
+    Export:
+      Name: !Sub '${Entity}-public-route-tables'
