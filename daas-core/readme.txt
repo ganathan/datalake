@@ -1,10 +1,3 @@
-#  -------------------------------------------------------
-#  File Name: readme.txt
-#  Description: Purpose of this file is to help fellow developers understand the objects in this repository and provide helpful hints.
-#  Programmer:  Ganesh Nathan
-#  Date:        11/19/2021
-#  -------------------------------------------------------
-
 1) daas-client1-stk-vpc-common-daas.yml
 This stack yaml file will be responsible to deploy the vpc in AWS CloudFormation. This template will be called externally for all
 operations (create/update/delete).
