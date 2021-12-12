@@ -16,7 +16,7 @@ Resources:
     Properties:
       Parameters:
         Environment: !Ref Environment
-        Name: !Sub ${Entity}-vpc-${Environment}
+        Name: !Sub ${Entity}-vpc-daas-core-${Environment}
         PrivateSubnet1Cidr: 10.31.0.0/24
         PrivateSubnet2Cidr: 10.31.32.0/24
         PrivateSubnet1AZ: us-west-2d

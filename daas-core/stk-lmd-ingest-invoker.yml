@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Invoker Lambda for data lake as a service - core (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  LambdaZipFileName:
+    Type: String
+
+Resources:
+  CreateDaaSCoreInvkLambda:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties :
+      Parameters:
+        Environment: !Ref Environment
+        Name: !Sub ${Entity}-lmd-invoker-daas-core-${Environment}
+        Description: !Sub Lambda Invoker for Datalake as a Service deployed in ${Environment}
+        EnablePandasLayer: true
+        EnableOpenPyXmlLayer: true
+        EnableXmlToDictLayer: true
+        SqsEventTriggerArn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${Entity}-sqs-ingest-daas-core-${Environment}
+        LambdaCompressedFileName: !Sub ${LambdaZipFileName}
+        HandlerName: daas-client1-lmd-metadata-invoker.lambda_handler
+        LambdaEnvVarFileName: deploy/daas-client1-lmd-metadata-invoker/daas-client1-stk-lmd-metadata-invoker-env-var.yml
+        MemorySize: 128
+        Timeout: 180
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/daas-client1-s3-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/daas-client1-cft-lmd-common-template.yml
+      TimeoutInMinutes : '60'
+
+  CreateDaaSMetadataInvkPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles:
+        - !GetAtt CreateDaaSCoreInvkLambda.Outputs.LambdaRole
+      PolicyName: plc-inline-lmd-ingest-invk
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "allowSQSAccess"
+            Effect: "Allow"
+            Action:
+              - "sqs:ReceiveMessage"
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+            Resource:
+              - Fn::Sub: "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${Entity}-sqs-ingest-daas-core-${Environment}"
+          -
+            Sid: "allowInvokeMetadataGenLambda"
+            Effect: "Allow"
+            Action:
+              - "lamda:InvokeAsync"
+              - "lambda:InvokeFunction"
+            Resource: "*"
+          -
+            Sid: "allowS3ReadAccess"
+            Effect: "Allow"
+            Action:
+              - "s3:GetObject"
+            Resource:
+              - "*"
+          -
+            Sid: "allowGlueAccess"
+            Effect: "Allow"
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "ec2:RunInstances"
+              - "logs:CreateLogGroup"
+            Resource:
+              -  "arn:aws:s3:::*/*aws-glue-*/*"
+              -  "arn:aws:s3:::aws-glue-*"
+              -  "arn:aws:s3:::aws-glue-*/*"
+              -  "arn:aws:ec2:*:*:image/*"
+              -  "arn:aws:ec2:*:*:subnet/*"
+              - "arn:aws:ec2:*:*:key-pair/*"
+              - "arn:aws:ec2:*:*:instance/*"
+              - "arn:aws:ec2:*:*:volume/*"
+              - "arn:aws:ec2:*:*:security-group/*"
+              - "arn:aws:ec2:*:*:network-interface/*"
+              - Fn::Sub: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          -
+            Sid: "allowGetLogEvents"
+            Effect: "Allow"
+            Action: "logs:GetLogEvents"
+            Resource:
+              -  "arn:aws:logs:*:*:*:/aws-glue/*"
+          -
+            Sid: "allowOtherAccess"
+            Effect: "Allow"
+            Action:
+              - "ec2:DescribeInstances"
+              - "rds:DescribeDBSubnetGroups"
+              - "cloudwatch:GetMetricData"
+              - "s3:ListBucket"
+              - "ec2:DescribeVpcAttribute"
+              - "glue:*"
+              - "iam:ListAttachedRolePolicies"
+              - "cloudwatch:ListDashboards"
+              - "rds:DescribeDBInstances"
+              - "iam:ListRolePolicies"
+              - "ec2:DescribeKeyPairs"
+              - "ec2:DescribeRouteTables"
+              - "iam:GetRole"
+              - "iam:ListRoles"
+              - "s3:GetBucketAcl"
+              - "ec2:DescribeSecurityGroups"
+              - "cloudformation:GetTemplateSummary"
+              - "cloudformation:DescribeStacks"
+              - "ec2:DescribeImages"
+              - "s3:ListAllMyBuckets"
+              - "ec2:DescribeVpcs"
+              - "iam:ListUsers"
+              - "iam:ListGroups"
+              - "ec2:DescribeVpcEndpoints"
+              - "ec2:DescribeSubnets"
+              - "iam:GetRolePolicy"
+              - "s3:GetBucketLocation"
+              - "rds:DescribeDBClusters"
+            Resource: "*"              

@@ -14,12 +14,13 @@ SET application=%3
 SET environment=%4
 SET region=%5
 SET serviceType=%6
+SET lambdaVersion=%7
 SET stackName=stk-%serviceType%-%application%
 SET commonS3Folder=%entity%-s3-%accountId%-%region%-common-artifacts-%environment%
 
 
 REM Deploy the stack first
-call %application%\deploy-%serviceType%.bat %entity% %accountId% %application% %environment% %region% %serviceType%
+call %application%\deploy-%serviceType%.bat %entity% %accountId% %application% %environment% %region% %serviceType% %lambdaVersion%
 
 aws cloudformation create-stack ^
    --stack-name %stackName%-%environment% ^

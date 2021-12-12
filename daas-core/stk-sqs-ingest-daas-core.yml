@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SQS ingestion queue for data lake as a service - core (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateIngestSQSQueue:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Environment: !Sub '${Environment}'
+        Name: !Sub '${Entity}-sqs-ingest-daas-core-${Environment}'
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sqs/scripts/template/cft-sqs-common-template.yml
+      TimeoutInMinutes: '60'

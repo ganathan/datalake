@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: NAT Gateway for data lake as a service - core (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+     Type: String
+     Default: dev
+     AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateNGWForDaaSCore:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Environment: !Ref Environment
+        Name: !Sub '${Entity}-ngw-daas-core-${Environment}'
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/daas-client1-s3-${AWS::Region}-common-artifacts-${Environment}/ngw/scripts/template/daas-client1-cft-ngw-common-template.yml
+      TimeoutInMinutes: '60'

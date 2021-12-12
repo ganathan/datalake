@@ -6,6 +6,7 @@ application=$3
 environment=$4
 region=$5
 serviceType=$6
+lambdaVersion=$7
 stackName=stk-$serviceType-$application
 commonS3Folder=$entity-s3-$accountId-$region-common-artifacts-$environment
 
@@ -14,7 +15,7 @@ commonS3Folder=$entity-s3-$accountId-$region-common-artifacts-$environment
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$application" ] && [ ! -z "$environment" ] && [ ! -z "$region" ] && [ ! -z "$serviceType" ]
 then
     # Deploy the stack first
-    sh deploy-$serviceType.sh $entity $accountId $application $environment $region $serviceType
+    sh deploy-$serviceType.sh $entity $accountId $application $environment $region $serviceType $lambdaVersion
 
     # create the cloudformation stack
     aws cloudformation update-stack \

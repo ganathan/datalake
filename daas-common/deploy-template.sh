@@ -9,7 +9,7 @@ templateName=cft-$serviceType-common
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 
 # Check if common bucket exits
-bucketstatus=$(aws s3api head-bucket --bucket "${s3_bucket}" 2>&1)
+bucketstatus=$(aws s3api head-bucket --bucket "${commonS3Bucket}" 2>&1)
 if echo "${bucketstatus}" | grep 'Not Found';
 then
     #Create the common bucket first
