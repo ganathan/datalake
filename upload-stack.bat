@@ -28,7 +28,7 @@ if serviceType=="lmd"
    SET functionName=%serviceType%-%application%
 
    REM Compress lamdba source file
-   powershell.exe Compress-Archive -LiteralPath ./%application%/%functionName%.py  -DestinationPath ./%application%/%functionName%-%version%.zip
+   powershell.exe Compress-Archive -LiteralPath ./%application%/%functionName%.py  -DestinationPath ./%application%/%functionName%-%lambdaVersion%.zip
 
    REM Copy zip file to common stack folder
    call aws s3 cp ./%application%/%functionName%-%version%.zip ^
