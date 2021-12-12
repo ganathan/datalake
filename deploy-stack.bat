@@ -19,34 +19,23 @@ SET lambdaVersion=%8
 SET stackName=stk-%serviceType%-%application%
 SET commonS3Folder=%entity%-s3-%accountId%-%region%-common-artifacts-%environment%
 
-REM Lambda service needs special handling...
-if serviceType=="lmd"
-   if [%8]==[]
-         lambdaVersion=100
-   REM reset variables for lambda
-   SET stackName=stk-%serviceType%-%lambdaName%
-   SET functionName=%serviceType%-%application%
 
-   REM Compress lamdba source file
-   powershell.exe Compress-Archive -LiteralPath ./%application%/%functionName%.py  -DestinationPath ./%application%/%functionName%-%version%.zip
+REM Deploy the stack first
+call upload-stack.bat %entity% %accountId% %application% %environment% %region% %serviceType% %lambdaName% %lambdaVersion%
 
-   REM Copy zip file to common stack folder
-   call aws s3 cp ./%application%/%functionName%-%version%.zip ^
-      s3://%commonS3Folder%/%objectType%/scripts/stacks/%stackName%/%functionName%-%version%.zip
+stackStatus=$(aws s3api head-bucket --bucket "${commonS3Bucket}" 2>&1)
+if echo "${stackStatus}" | grep 'not found';
 
-   REM Copy the env var file to the common stack folder
-   call aws s3 cp ./%application%/%stackName%-env-var.yml  ^
-      s3://%commonS3Folder%/%objectType%/scripts/stacks/%stackName%/%stackName%-env-var.yml
-
-
-REM Copy the Stack to the common stack folder
-call aws s3 cp .\%application%\%stackName%.yml ^
-   s3://%commonS3Folder%/%serviceType%-stack/scripts/stacks/%stackName%.yml
+aws cloudformation create-stack ^
+   --stack-name %stackName%-%environment% ^
+	 --region %region% ^
+	 --template-url https://s3-%region%.amazonaws.com/%commonS3Folder%/%serviceType%/scripts/stacks/%stackName%/%stackName%.yml ^
+	 --parameters ParameterKey=Environment,ParameterValue=%environment%
 goto eof
 
 :usage
 @echo ERROR: Missing Required Parameters! Please see below the syntax to execute this batch file.
-@echo USAGE: "%0 <entity> <account id> <environment> <region> <service type> <<lambda name>> <<lambda version>>"
+@echo USAGE: "%0 <entity> <account id> <application> <environment> <region> <service type> <<lambda name>> <<lambda version>>"
 
 :eof
 @echo Done!

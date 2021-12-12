@@ -1,8 +1,3 @@
-# --------------------------------------------------------------------------
-# Author:       Ganesh Nathan
-# Date:         05/08/2020
-# Description:  DaaS common lambda to create distribution glue crawler, catalog and table
-# --------------------------------------------------------------------------
 import copy
 import json
 import os
