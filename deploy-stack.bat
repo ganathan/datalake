@@ -18,15 +18,38 @@ SET lambdaName=%7
 SET lambdaVersion=%8
 SET stackName=stk-%serviceType%-%application%
 SET commonS3Folder=%entity%-s3-%accountId%-%region%-common-artifacts-%environment%
+SET type="update"
+
+REM Lambda service needs special handling...
+if serviceType=="lmd"
+   if [%8]==[]
+         lambdaVersion=100
+   REM reset variables for lambda
+   SET stackName=stk-%serviceType%-%lambdaName%
+   SET functionName=%serviceType%-%application%
+
+   REM Compress lamdba source file
+   powershell.exe Compress-Archive -LiteralPath ./%application%/%functionName%.py  -DestinationPath ./%application%/%functionName%-%lambdaVersion%.zip
+
+   REM Copy zip file to common stack folder
+   call aws s3 cp ./%application%/%functionName%-%version%.zip ^
+      s3://%commonS3Folder%/%objectType%/scripts/stacks/%stackName%/%functionName%-%version%.zip
+
+   REM Copy the env var file to the common stack folder
+   call aws s3 cp ./%application%/%stackName%-env-var.yml  ^
+      s3://%commonS3Folder%/%objectType%/scripts/stacks/%stackName%/%stackName%-env-var.yml
 
 
-REM Deploy the stack first
-call upload-stack.bat %entity% %accountId% %application% %environment% %region% %serviceType% %lambdaName% %lambdaVersion%
+REM Copy the Stack to the common stack folder
+call aws s3 cp .\%application%\%stackName%.yml ^
+   s3://%commonS3Folder%/%serviceType%-stack/scripts/stacks/%stackName%.yml
+
 
 stackStatus=$(aws s3api head-bucket --bucket "${commonS3Bucket}" 2>&1)
 if echo "${stackStatus}" | grep 'not found';
+type="create"
 
-aws cloudformation create-stack ^
+aws cloudformation %type%-stack ^
    --stack-name %stackName%-%environment% ^
 	 --region %region% ^
 	 --template-url https://s3-%region%.amazonaws.com/%commonS3Folder%/%serviceType%/scripts/stacks/%stackName%/%stackName%.yml ^
