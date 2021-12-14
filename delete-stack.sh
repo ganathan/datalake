@@ -1,9 +1,10 @@
 #!/bin/bash
 # set variables
-application=$1
-environment=$2
-region=$3
-serviceType=$4
+entity=$1
+application=$2
+environment=$3
+region=$4
+serviceType=$5
 stackName=stk-$serviceType-$application
 commonS3Folder=$entity-s3-$accountId-$region-common-artifacts-$environment
 

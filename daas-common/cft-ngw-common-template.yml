@@ -33,7 +33,7 @@ Resources:
     Properties:
         AllocationId: !GetAtt AttachElasticIP.AllocationId
         SubnetId:
-          Fn::ImportValue: !Sub 'daas-vpc-${Environment}-public-subnet-1'
+          Fn::ImportValue: !Sub '${Entity}-public-subnet-1'
         Tags:
           - Key: Application
             Value: !Ref Application
@@ -46,7 +46,7 @@ Resources:
           - Key: Environment
             Value: !Ref Environment
           - Key: Name
-            Value: !Ref Entity-ngw
+            Value: !Sub ${Entity}-ngw
           - Key: Project
             Value: !Ref Project
           - Key: Support
@@ -61,7 +61,7 @@ Resources:
     Type: AWS::EC2::Route
     Properties:
         RouteTableId:
-          Fn::ImportValue: !Sub 'daas-vpc-${Environment}-private-route-table-1'
+          Fn::ImportValue: !Sub '${Entity}-private-route-table-1'
         DestinationCidrBlock: 0.0.0.0/0
         NatGatewayId: !Ref CreateNATGateway
 

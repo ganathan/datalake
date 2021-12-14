@@ -17,6 +17,8 @@ Parameters:
   Environment:
     Type: String
     AllowedValues: [dev, tst, int, uat, prd, poc]
+  Name:
+    Type: String
   PrivateSubnet1Cidr:
     Type: String
     Default: false
@@ -81,7 +83,7 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
         - Key: Name
-          Value: !Ref Entity-vpc
+          Value: !Ref Name
         - Key: Project
           Value: !Ref Project
         - Key: Support
@@ -264,13 +266,11 @@ Resources:
         - Key: CostCenter
           Value: !Ref CostCenter
         - Key: Entity
-          Value: !Ref Entity 
-        - Key: Entity
           Value: !Ref Entity
         - Key: Environment
           Value: !Ref Environment
         - Key: Name
-          Value: !Sub '${Enity}-public2-route'
+          Value: !Sub '${Entity}-public2-route'
         - Key: Project
           Value: !Ref Project
         - Key: Support
@@ -289,13 +289,11 @@ Resources:
         - Key: CostCenter
           Value: !Ref CostCenter
         - Key: Entity
-          Value: !Ref Entity 
-        - Key: Entity
           Value: !Ref Entity
         - Key: Environment
           Value: !Ref Environment
         - Key: Name
-          Value: !Sub '${Enity}-private1-route'
+          Value: !Sub '${Entity}-private1-route'
         - Key: Project
           Value: !Ref Project
         - Key: Support
@@ -482,7 +480,7 @@ Outputs:
     Description: Vpc
     Value: !Ref CreateVPC
     Export:
-      Name: !Sub '${Enitty}-vpc'
+      Name: !Sub '${Entity}-vpc'
   InternetGateway:
     Description: Internet Gateway
     Value: !Ref CreateInternetGateway

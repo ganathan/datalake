@@ -83,6 +83,8 @@ Resources:
           Value: !Ref CostCenter
         - Key: Data Classification
           Value: !Ref DataClassification
+        - Key: Entity
+          Value: !Ref Entity
         - Key: Environment
           Value: !Ref Environment
         - Key: Name
