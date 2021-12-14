@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Common SQS Queue Cloudformation Template
+Description: AWS Common SQS Queue Cloudformation Template
 
 Parameters:
   Application:
@@ -53,8 +53,8 @@ Resources:
       MessageRetentionPeriod: !Sub ${MessageRetentionPeriod}
       QueueName: !If
           - isFifo
-          - !Sub ${Name}-${Environment}.${QueueType}
-          - !Sub ${Name}-${Environment}
+          - !Sub ${Name}.${QueueType}
+          - !Sub ${Name}
       ReceiveMessageWaitTimeSeconds: 5
       RedrivePolicy: !If
           - isDLQEnabled
@@ -90,8 +90,8 @@ Resources:
           - false
       QueueName: !If
           - isFifo
-          - !Sub ${Name}-${Environment}-dlq.${QueueType}
-          - !Sub ${Name}-${Environment}-dlq
+          - !Sub ${Name}-dlq.${QueueType}
+          - !Sub ${Name}-dlq
       Tags :
           - Key: Application
             Value: !Ref Application
@@ -110,8 +110,8 @@ Outputs:
   SQSQueueName:
     Value: !Ref CreateSQSQueueCreation
     Export:
-      Name: !Sub '${Name}-${Environment}'
+      Name: !Sub '${Name}'
   S3QueueArn:
     Value: !GetAtt CreateSQSQueueCreation.Arn
     Export:
-      Name: !Sub '${Name}-${Environment}-arn'
+      Name: !Sub '${Name}-arn'

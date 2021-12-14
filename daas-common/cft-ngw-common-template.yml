@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'NAT Gateway Common CloudFormation Stack'
+Description: AWS NAT Gateway Common CloudFormation Stack
 
 Parameters:
   Application:

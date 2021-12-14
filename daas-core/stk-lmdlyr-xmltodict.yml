@@ -18,6 +18,7 @@ Resources:
     Properties :
       Parameters:
         Environment: !Ref Environment
-        Name: !Ref Name
+        Name: !Sub ${Name}-${Environment}
+        LayerName: !Sub ${Name}
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmdlyr/scripts/template/cft-lmdlyr-common-template.yml
       TimeoutInMinutes : '60'

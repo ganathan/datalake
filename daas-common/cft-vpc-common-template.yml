@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'VPC Common CloudFormation Stack'
+Description: AWS VPC Common CloudFormation Stack
 
 Parameters:
   Application:

@@ -16,7 +16,7 @@ then
     # sleep 60
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region sqs
     # sh ../deploy-stack.sh $entity $accountId ingest-daas-core $environment $region sqs
-    # sh ../daas-common/deploy-template.sh $entity $accountId $environment $regionlmdlyr
+    # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmdlyr
     # sh ../deploy-stack.sh $entity $accountId xmltodict $environment $region lmdlyr
     sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
     sh ../deploy-stack.sh $entity $accountId ingest-invoker $environment $region lmd 1

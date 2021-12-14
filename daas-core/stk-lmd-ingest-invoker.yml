@@ -23,12 +23,14 @@ Resources:
         EnablePandasLayer: true
         EnableOpenPyXmlLayer: true
         EnableXmlToDictLayer: true
-        SqsEventTriggerArn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${Entity}-sqs-ingest-daas-core-${Environment}
+        SqsEventTriggerArn: 
+          Fn::ImportValue:
+            !Sub "${Entity}-sqs-ingest-daas-core-${Environment}-arn"
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         HandlerName: lmd-metadata-invoker.lambda_handler
         LambdaEnvVarFileName: !Sub stacks/stk-lmd-ingest-invoker/stk-lmd-ingest-invoker-env-var.yml
         MemorySize: 128
-        Timeout: 180
+        Timeout: 120
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 
@@ -41,16 +43,6 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          -
-            Sid: "allowSQSAccess"
-            Effect: "Allow"
-            Action:
-              - "sqs:ReceiveMessage"
-              - "sqs:DeleteMessage"
-              - "sqs:GetQueueAttributes"
-              - "sqs:ChangeMessageVisibility"
-            Resource:
-              - Fn::Sub: "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${Entity}-sqs-ingest-daas-core-${Environment}"
           -
             Sid: "allowInvokeMetadataGenLambda"
             Effect: "Allow"

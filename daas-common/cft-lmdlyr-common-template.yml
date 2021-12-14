@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Common Template for Lambda Layer.
+Description: AWS Common Template for Lambda Layer.
 
 Parameters:
   Entity:
@@ -8,6 +8,8 @@ Parameters:
   Environment:
     Type: String
   Name:
+    Type: String
+  LayerName:
     Type: String
 
 Resources:
@@ -21,12 +23,12 @@ Resources:
         - python3.6
       Content:
         S3Bucket: !Sub ${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}
-        S3Key: !Sub lmdlyr/scripts/stacks/stk-lmdlyr-${Name}/${Name}.zip
-      Description: !Sub Lambda Layer for ${Name} in ${Environment}
-      LayerName: !Sub ${Entity}-lmdlyr-${Name}-${Environment}
+        S3Key: !Sub lmdlyr/scripts/stacks/stk-lmdlyr-${LayerName}/${LayerName}.zip
+      Description: !Sub Lambda Layer for ${LayerName} in ${Environment}
+      LayerName: !Sub ${Entity}-lmdlyr-${Name}
       LicenseInfo: MIT
 Outputs:
   LambdaLayerArn:
     Value: !Ref CreateLambdaLayer
     Export:
-      Name: !Sub ${Entity}-lmdlyr-${Name}-${Environment}-arn
+      Name: !Sub ${Entity}-lmdlyr-${Name}-arn

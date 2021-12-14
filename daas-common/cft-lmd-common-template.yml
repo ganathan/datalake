@@ -243,6 +243,15 @@ Resources:
                   - "ec2:DeleteNetworkInterface"
                 Resource: "*"
               -
+                Sid: "SQSReadaccess"
+                Effect: "Allow"
+                Action:
+                  - "sqs:ReceiveMessage"
+                  - "sqs:DeleteMessage"
+                  - "sqs:GetQueueAttributes"
+                  - "sqs:ChangeMessageVisibility"                  
+                Resource: "*"
+              -
                 Sid: "Xrayaccess"
                 Effect: "Allow"
                 Action:

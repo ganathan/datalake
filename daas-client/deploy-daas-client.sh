@@ -17,7 +17,9 @@ then
     sleep 60
     # Deploy the buckets
     sh ../daas-common/deploy-template.sh $entity $accountId $environment $region s3
-    sh ../deploy-stack.sh $entity $accountId daas-client $environment $region s3
+    sh ../deploy-stack.sh $entity $accountId daas-client-athena-log $environment $region s3
+    sh ../daas-common/deploy-template.sh $entity $accountId $environment $region s3
+    sh ../deploy-stack.sh $entity $accountId daas-client-raw-bucket $environment $region s3
     # Deploy the lambda
     sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
     sh ../deploy-stack.sh $entity $accountId metadata-generator $environment $region lmd 1
