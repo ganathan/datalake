@@ -17,5 +17,5 @@ Resources:
       Parameters:
         Environment: !Ref Environment
         Name: !Sub '${Entity}-ngw-daas-core-${Environment}'
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/daas-client1-s3-${AWS::Region}-common-artifacts-${Environment}/ngw/scripts/template/daas-client1-cft-ngw-common-template.yml
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/ngw/scripts/template/cft-ngw-common-template.yml
       TimeoutInMinutes: '60'
