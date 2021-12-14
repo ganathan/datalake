@@ -6,8 +6,7 @@ application=$3
 environment=$4
 region=$5
 serviceType=$6
-lambdaName=$7
-lambdaVersion=$8
+lambdaVersion=$7
 stackName=stk-$serviceType-$application
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 type=update
@@ -33,22 +32,20 @@ then
         then
             lambdaVersion=100
         fi
-        # reset variables for lambda
-        stackName=stk-$serviceType-$lambdaName
-        functionName=$serviceType-$application
 
         # First delete the existing zip file. this ensures always a fresh zip file is created and deployed!
-        rm $functionName-$lambdaVersion.zip
+        rm $serviceType-$application-$lambdaVersion.zip
 
         # Create a new zip file with the given version.
-        zip -r -X $functionName-$lambdaVersion.zip $functionName.py
+        zip -r -X $serviceType-$application-$lambdaVersion.zip $serviceType-$application.py
+        sleep 5
 
         # Copy zip file to common stack folder
-        call aws s3 cp $functionName-$lambdaVersion.zip \
-            s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$functionName-$version.zip
+        aws s3 cp $serviceType-$application-$lambdaVersion.zip \
+            s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$serviceType-$application-$lambdaVersion.zip
 
         # Copy the env var file to the common stack folder only when it exists
-        file = $stackName-env-var.yml
+        file=$stackName-env-var.yml
         if [[ -f "$file" ]]; then
             aws s3 cp $file  \
                 s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName-env-var.yml
@@ -71,13 +68,24 @@ then
         type=create
     fi
 
-    # create the cloudformation stack
-    aws cloudformation $type-stack \
-        --stack-name $stackName-$environment \
-        --region $region \
-        --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-       	--parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment 
-
+    if [ "$serviceType" == "lmd" ]
+    then
+        # create the cloudformation stack
+        aws cloudformation $type-stack \
+            --stack-name $stackName-$environment \
+            --region $region \
+            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
+                        ParameterKey=LambdaZipFileName,ParameterValue=$stackName/$serviceType-$application-$lambdaVersion.zip \
+            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+    else
+        # create the cloudformation stack
+        aws cloudformation $type-stack \
+            --stack-name $stackName-$environment \
+            --region $region \
+            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment    
+    fi
 else
-    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <application> <environment> <region> <service type> <<lambda name>> <<lambda version>"
+    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <application> <environment> <region> <service type> <<lambda version>"
 fi

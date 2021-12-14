@@ -4,7 +4,7 @@ Description: AWS Common Lambda Cloudformation Template
 Mappings:
   SecurityGroups:
     us-west-2:
-      dev: sg-00971eb13d7588d70
+      dev: sg-0d70ba4c05719b84f
       tst: sg-00971eb13d7588d70
       prd: sg-891852d6
       poc: sg-07f0c0f6466541460
@@ -12,7 +12,8 @@ Mappings:
   SubnetId:
     us-west-2:
       dev:
-        - subnet-191bd544
+        - subnet-0d09fe630618e2b1a
+        - subnet-04d443cb47578b59e
       tst:
         - subnet-191bd544
       prd:
@@ -80,7 +81,7 @@ Parameters:
     Type: String
   LambdaEnvVarFileName:
     Type: String
-    Default: template/daas-client1-cft-lmd-common-env-var.yml
+    Default: template/cft-lmd-common-env-var.yml
   MemorySize:
     Type: String
     Default: 128
@@ -131,7 +132,7 @@ Resources:
     Properties :
         Code :
             S3Bucket: !Sub ${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}
-            S3Key: !Sub lmd/scripts/deploy/${LambdaCompressedFileName}
+            S3Key: !Sub lmd/scripts/stacks/${LambdaCompressedFileName}
         Description : !Ref Description
         FunctionName : !Ref Name
         Fn::Transform:
@@ -152,17 +153,17 @@ Resources:
           - !If
             - isPyOdbcLayerEnabled
             - Fn::ImportValue:
-                !Sub "{Entity}-lmdlyr-pyodbc-${Environment}-arn"
+                !Sub "${Entity}-lmdlyr-pyodbc-${Environment}-arn"
             - !Ref "AWS::NoValue"
           - !If
             - isPyArrowLayerEnabled
             - Fn::ImportValue:
-                !Sub "{Entity}-lmdlyr-pyarrow-${Environment}-arn"
+                !Sub "${Entity}-lmdlyr-pyarrow-${Environment}-arn"
             - !Ref "AWS::NoValue"
           - !If
             - isPsycopg2LayerEnabled
             - Fn::ImportValue:
-                !Sub "{Entity}-lmdlyr-psycopg2-${Environment}-arn"
+                !Sub "${Entity}-lmdlyr-psycopg2-${Environment}-arn"
             - !Ref "AWS::NoValue"
           - !If
             - isPandasLayerEnabled
@@ -179,7 +180,7 @@ Resources:
           - !If
             - isXmlToDictLayerEnabled
             - Fn::ImportValue:
-                !Sub "{Entity}-lmdlyr-xmltodict-${Environment}-arn"
+                !Sub "${Entity}-lmdlyr-xmltodict-${Environment}-arn"
             - !Ref "AWS::NoValue"
         Tags:
             - Key: Application
@@ -209,7 +210,7 @@ Resources:
       GroupDescription: Enable daas common lambda security group
       GroupName: !Sub ${Entity}-lmd-common-sec-grp-${Environment}
       VpcId: !ImportValue
-        Fn::Sub: "${Entity}-vpc-${Environment}-vpc"
+        Fn::Sub: "${Entity}-vpc"
 
   LambdaRole:
     Type: "AWS::IAM::Role"
@@ -227,7 +228,7 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: !Sub ${Entity}-plc-common-lamdba
+        - PolicyName: !Sub plc-${Entity}-common-lamdba
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
