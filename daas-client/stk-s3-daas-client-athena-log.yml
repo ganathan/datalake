@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: S3 Stack to create bucket to ingest raw data from source
+Description: Athena log storage for data lake as a service - client (DaaS - Client)
 
 # Required Parameters: Environment
 Parameters:
