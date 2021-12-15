@@ -44,19 +44,18 @@ Resources:
         Version: "2012-10-17"
         Statement:
           -
-            Sid: "allowInvokeMetadataGenLambda"
-            Effect: "Allow"
-            Action:
-              - "lamda:InvokeAsync"
-              - "lambda:InvokeFunction"
-            Resource: "*"
-          -
             Sid: "allowS3ReadAccess"
             Effect: "Allow"
             Action:
               - "s3:GetObject"
             Resource:
               - "*"
+          -
+            Sid: "assumeDaaSClientRole"
+            Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Resource: 
+              Fn::Sub: "arn:aws:iam::*:role/rle-${Entity}-lmd-metadata-generator-${Environment}"
           -
             Sid: "allowGlueAccess"
             Effect: "Allow"

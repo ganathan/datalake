@@ -19,7 +19,7 @@ then
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmdlyr
     # sh ../deploy-stack.sh $entity $accountId xmltodict $environment $region lmdlyr
     sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
-    sh ../deploy-stack.sh $entity $accountId ingest-invoker $environment $region lmd 2
+    sh ../deploy-stack.sh $entity $accountId ingest-invoker $environment $region lmd 1
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment>"
 fi

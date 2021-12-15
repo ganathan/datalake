@@ -69,6 +69,12 @@ Resources:
               - "s3:GetObject"
             Resource: "*"
           -
+            Sid: "allowLambdaInvokeAccess"
+            Effect: "Allow"
+            Action: "lambda:*"
+            Resource: 
+              Fn::Sub: "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-lmd-metadata-generator-${Environment}"
+          -
             Sid: "allowGlueAccess"
             Effect: "Allow"
             Action:
@@ -77,11 +83,11 @@ Resources:
               - "ec2:RunInstances"
               - "logs:CreateLogGroup"
             Resource:
-              -  "arn:aws:s3:::*/*aws-glue-*/*"
-              -  "arn:aws:s3:::aws-glue-*"
-              -  "arn:aws:s3:::aws-glue-*/*"
-              -  "arn:aws:ec2:*:*:image/*"
-              -  "arn:aws:ec2:*:*:subnet/*"
+              - "arn:aws:s3:::*/*aws-glue-*/*"
+              - "arn:aws:s3:::aws-glue-*"
+              - "arn:aws:s3:::aws-glue-*/*"
+              - "arn:aws:ec2:*:*:image/*"
+              - "arn:aws:ec2:*:*:subnet/*"
               - "arn:aws:ec2:*:*:key-pair/*"
               - "arn:aws:ec2:*:*:instance/*"
               - "arn:aws:ec2:*:*:volume/*"
@@ -104,12 +110,6 @@ Resources:
               StringLike:
                 iam:PassedToService:
                       - "glue.amazonaws.com"
-          -
-            Sid: Allow lambda invoke access
-            Effect: Allow
-            Action: lambda:*
-            Resource: 
-              - Fn::Sub: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-lmd-metadata-generator-${Environment}"
           -
             Sid: "allowOtherAccess"
             Effect: "Allow"

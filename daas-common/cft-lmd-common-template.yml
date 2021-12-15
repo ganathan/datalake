@@ -1,15 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: AWS Common Lambda Cloudformation Template
 
-Mappings:
-  SecurityGroups:
-    us-west-2:
-      dev: sg-0d70ba4c05719b84f
-      tst: sg-00a304bb94720250f
-      prd: sg-00a304bb94720250f
-      poc: sg-07f0c0f6466541460
-      uat: sg-00971eb13d7588d70
-
 Parameters:
   Application:
     Type: String
@@ -183,7 +174,7 @@ Resources:
         Timeout : !Ref Timeout
         VpcConfig :
             SecurityGroupIds:
-              - !FindInMap [SecurityGroups, !Ref 'AWS::Region', !Ref Environment]
+              - !Ref CreateDaaSLambdaSecurityGroup
             SubnetIds: 
               - !ImportValue
                 'Fn::Sub': '${Entity}-private-subnet-1'

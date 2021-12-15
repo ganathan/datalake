@@ -12,4 +12,4 @@ Environment:
       Fn::Sub: "${Entity}-daas-core-glue-db"
     ENV_VAR_GLUE_SERVICE_ROLE: "AWSGlueServiceRoleDefault"
     ENV_VAR_CLIENT_LAMBDA_NAME: 
-      Fn::Sub: "${Entity}-lmd-ingest-meta-generator-${Environment}"
+      Fn::Sub: "${Entity}-lmd-metadata-generator-${Environment}"

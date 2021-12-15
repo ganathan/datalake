@@ -104,33 +104,37 @@ def convert_xml_to_json(source_bucket, source_key, short_path, domain_name, obje
 # ----------------------------------------------------------
 # Read the account id from the daas-config file
 # ----------------------------------------------------------
-def get_accountid(data_dict):
+def get_client_accountid(data_dict):
     accountid = json.loads(data_dict)['account_id']
     return accountid
 
 # ----------------------------------------------------------
 # Read the region from the daas-config file
 # ----------------------------------------------------------
-def get_region(data_dict):
+def get_client_region(data_dict):
     region = json.loads(data_dict)['region']
     return region
+
+# ----------------------------------------------------------
+# Read the entity from the daas-config file
+# ----------------------------------------------------------
+def get_client_entity_name(data_dict):
+    entity_name = json.loads(data_dict)['entity']
+    return entity_name
 
 # ----------------------------------------------------------
 # Invoke metadata generator lambda on the client account
 # ----------------------------------------------------------
 def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values):
     sts_connection = boto3.client('sts')
-    print(target_lambda_arn)
     daas_client = sts_connection.assume_role(
         RoleArn=target_lambda_role_arn,
-        RoleSessionName="cross_account_lambda"
+        RoleSessionName="daas-core"
     )
-    print("aftr getting sts")
     ACCESS_KEY = daas_client['Credentials']['AccessKeyId']
     SECRET_KEY = daas_client['Credentials']['SecretAccessKey']
     SESSION_TOKEN = daas_client['Credentials']['SessionToken']
     lambda_client = boto3.client('lambda', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, aws_session_token=SESSION_TOKEN)
-    lambda_name = target_lambda_arn
     data={}
     data['glue_db_name'] = glue_db_name
     data['lakeformation_role_name'] = lakeformation_role_name
@@ -144,11 +148,11 @@ def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path,
     data['partition_values'] = partition_values
     json_str=json.dumps(data)
     response = lambda_client.invoke(
-        FunctionName= lambda_name, 
+        FunctionName= target_lambda_arn, 
         InvocationType = "Event", 
         Payload = json_str
     )
-    return response
+    return response['Payload'].read()
 
 # -------------------------------------------------
 # Main lambda function
@@ -188,11 +192,12 @@ def lambda_handler(event, context):
                     else:                   
                         fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
                         data_dict = fileObj['Body'].read()
-                        account_id = get_accountid(data_dict)
-                        region = get_region(data_dict)
+                        account_id = get_client_accountid(data_dict)
+                        region = get_client_region(data_dict)
+                        entity = get_client_entity_name(data_dict)
                         target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
                         target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
-                        crawler_name = 'daas-client1-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
+                        crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
                         table_name = domain_name.replace('-','_')
                         result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values)
                         # create_cloudwatch_event(crawler_name)
