@@ -105,6 +105,12 @@ Resources:
                 iam:PassedToService:
                       - "glue.amazonaws.com"
           -
+            Sid: Allow lambda invoke access
+            Effect: Allow
+            Action: lambda:*
+            Resource: 
+              - Fn::Sub: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-lmd-metadata-generator-${Environment}"
+          -
             Sid: "allowOtherAccess"
             Effect: "Allow"
             Action:

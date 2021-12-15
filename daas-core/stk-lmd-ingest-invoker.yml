@@ -27,7 +27,7 @@ Resources:
           Fn::ImportValue:
             !Sub "${Entity}-sqs-ingest-daas-core-${Environment}-arn"
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
-        HandlerName: lmd-metadata-invoker.lambda_handler
+        HandlerName: lmd-ingest-invoker.lambda_handler
         LambdaEnvVarFileName: !Sub stacks/stk-lmd-ingest-invoker/stk-lmd-ingest-invoker-env-var.yml
         MemorySize: 128
         Timeout: 120

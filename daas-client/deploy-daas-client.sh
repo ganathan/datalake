@@ -20,10 +20,10 @@ then
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region s3
     # sh ../deploy-stack.sh $entity $accountId daas-client-athena-log $environment $region s3
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region s3
-    # sh ../deploy-stack.sh $entity $accountId daas-client-test-raw-bucket $environment $region s3
+    sh ../deploy-stack.sh $entity $accountId daas-client-test-raw-bucket $environment $region s3
     # Deploy the lambda
-    sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
-    sh ../deploy-stack.sh $entity $accountId metadata-generator $environment $region lmd 1
+    # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
+    # sh ../deploy-stack.sh $entity $accountId metadata-generator $environment $region lmd 1
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment>"
 fi

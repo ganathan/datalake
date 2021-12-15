@@ -40,4 +40,4 @@ Resources:
               - !GetAtt CreateIngestSQSQueue.Outputs.S3QueueArn
             Condition:
               ArnLike:
-                'aws:SourceArn': !Sub 'arn:aws:s3:${AWS::Region}:*:{$Entity}-s3-${AWS::Region}-*-raw-*-${Environment}'
+                'aws:SourceArn': !Sub 'arn:aws:s3:::${Entity}-s3-${AWS::Region}-*-raw-*-${Environment}'

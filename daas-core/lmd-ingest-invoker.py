@@ -25,7 +25,7 @@ def init():
     accountid = os.environ["ENV_VAR_ACCOUNT_ID"]
     region = os.environ["ENV_VAR_REGION_NAME"]
     daas_config = os.environ["ENV_VAR_DAAS_CONFIG_FILE"]
-    glue_db_name = os.environ["ENV_VAR_GLUE_DB"]
+    glue_db_name = os.environ["ENV_VAR_DAAS_CORE_GLUE_DB"]
     lakeformation_role_name = os.environ["ENV_VAR_GLUE_SERVICE_ROLE"]
     target_lambda_name = os.environ["ENV_VAR_CLIENT_LAMBDA_NAME"]
 
@@ -118,8 +118,18 @@ def get_region(data_dict):
 # ----------------------------------------------------------
 # Invoke metadata generator lambda on the client account
 # ----------------------------------------------------------
-def invoke_lambda(target_lambda_arn, crawler_name, path, domain_name, table_name, value, partition_values):
-    lambda_client = boto3.client("lambda", region_name="us-west-2")
+def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values):
+    sts_connection = boto3.client('sts')
+    print(target_lambda_arn)
+    daas_client = sts_connection.assume_role(
+        RoleArn=target_lambda_role_arn,
+        RoleSessionName="cross_account_lambda"
+    )
+    print("aftr getting sts")
+    ACCESS_KEY = daas_client['Credentials']['AccessKeyId']
+    SECRET_KEY = daas_client['Credentials']['SecretAccessKey']
+    SESSION_TOKEN = daas_client['Credentials']['SessionToken']
+    lambda_client = boto3.client('lambda', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, aws_session_token=SESSION_TOKEN)
     lambda_name = target_lambda_arn
     data={}
     data['glue_db_name'] = glue_db_name
@@ -181,9 +191,10 @@ def lambda_handler(event, context):
                         account_id = get_accountid(data_dict)
                         region = get_region(data_dict)
                         target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
+                        target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
                         crawler_name = 'daas-client1-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
                         table_name = domain_name.replace('-','_')
-                        result = invoke_lambda(target_lambda_arn, crawler_name, path, domain_name, table_name, value, partition_values)
+                        result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values)
                         # create_cloudwatch_event(crawler_name)
                         print(result)
                 else:

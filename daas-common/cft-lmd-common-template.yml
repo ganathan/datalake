@@ -4,28 +4,11 @@ Description: AWS Common Lambda Cloudformation Template
 Mappings:
   SecurityGroups:
     us-west-2:
-      dev: sg-00a304bb94720250f
-      tst: sg-00971eb13d7588d70
-      prd: sg-891852d6
+      dev: sg-0d70ba4c05719b84f
+      tst: sg-00a304bb94720250f
+      prd: sg-00a304bb94720250f
       poc: sg-07f0c0f6466541460
       uat: sg-00971eb13d7588d70
-  SubnetId:
-    daas-core-us-west-2:
-      dev:
-        - subnet-0d09fe630618e2b1a
-        - subnet-04d443cb47578b59e
-      tst:
-        - subnet-191bd544
-      prd:
-        - subnet-0e3ea1c37d75e2a59
-        - subnet-0190df93ba02e8745
-        - subnet-079a7c43754dc8196
-        - subnet-04bf6dfa278f40430
-      poc:
-        - subnet-01500147167f431fa
-        - subnet-06a9c5988ea75f87d
-      uat:
-        - subnet-191bd544
 
 Parameters:
   Application:
