@@ -19,3 +19,25 @@ Resources:
         Name: !Sub '${Entity}-sqs-ingest-daas-core-${Environment}'
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sqs/scripts/template/cft-sqs-common-template.yml
       TimeoutInMinutes: '60'
+
+  CreateIngestSQSQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Properties:
+      Queues:
+        - !GetAtt CreateIngestSQSQueue.Outputs.SQSQueueName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: SQSWriteaccess
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - 'sqs:DeleteMessage'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:SendMessage'
+              - 'sqs:*'
+            Resource:
+              - !GetAtt CreateIngestSQSQueue.Outputs.S3QueueArn
+            Condition:
+              ArnLike:
+                'aws:SourceArn': !Sub 'arn:aws:s3:${AWS::Region}:*:{$Entity}-s3-${AWS::Region}-*-raw-*-${Environment}'
