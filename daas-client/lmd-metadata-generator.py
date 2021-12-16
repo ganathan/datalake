@@ -162,6 +162,7 @@ def lambda_handler(event, context):
     init()
     print(event)
     try:
+        partition_values=[]
         glue_db_name = json.dumps(event['glue_db_name']).strip('"')
         lakeformation_role_name = json.dumps(event['lakeformation_role_name']).strip('"')
         target_lambda_name = json.dumps(event['target_lambda_name']).strip('"')
@@ -171,7 +172,7 @@ def lambda_handler(event, context):
         domain_name = json.dumps(event['domain_name']).strip('"')
         table_name = json.dumps(event['table_name']).strip('"')
         partitions = json.dumps(event['partitions']).strip('"')
-        partition_values = json.dumps(event['partition_values']).strip('"')
+        partition_values.append(json.dumps(event['partition_values']).strip('"'))
         if crawler_exits(crawler_name):
             print('1a')
             add_table_partitions(glue_db_name, table_name, partitions, partition_values)

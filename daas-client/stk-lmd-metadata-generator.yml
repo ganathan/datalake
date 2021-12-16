@@ -95,6 +95,21 @@ Resources:
               - "arn:aws:ec2:*:*:network-interface/*"
               - Fn::Sub: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
           -
+            Sid: "allowIamPolicyForServiceRole"
+            Effect: "Allow"
+            Action:
+              - "iam:AttachRolePolicy"
+              - "iam:DeleteRolePolicy"
+              - "iam:DetachRolePolicy"
+              - "iam:GetRole"
+              - "iam:GetRolePolicy"
+              - "iam:ListAttachedRolePolicies"
+              - "iam:ListRolePolicies"
+              - "iam:PutRolePolicy"
+              - "iam:UpdateRole"
+              - "iam:UpdateRoleDescription"
+            Resource: "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
+          -
             Sid: "allowGetLogEvents"
             Effect: "Allow"
             Action: "logs:GetLogEvents"
@@ -105,7 +120,7 @@ Resources:
             Effect: "Allow"
             Action: "iam:PassRole"
             Resource:
-              - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/rle-daas-client-service-role-${Environment}"
+              - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
             Condition:
               StringLike:
                 iam:PassedToService:
