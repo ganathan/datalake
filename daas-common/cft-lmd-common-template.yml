@@ -11,6 +11,9 @@ Parameters:
   CostCenter:
     Type: String
     Default: 55100
+  CreateSecurityGroup:
+    Type: String
+    Default: false
   Description:
     Type: String
   EnablePandasLayer:
@@ -98,7 +101,7 @@ Conditions:
   isLambdaS3EventEnabled: !Not [ !Equals [!Ref S3EventTriggerArn, false] ]
   isLambdaSQSEventEnabled: !Not [ !Equals [!Ref SqsEventTriggerArn, false] ]
   isVpcConfigEnabled: !Equals [!Ref EnableVpcConfig, true]
-  isSecurityGroupEnabled: !Not [ !Equals [!Ref SecurityGroupId, false] ]
+  isSecurityGroupEnabled: !Not [ !Equals [!Ref CreateSecurityGroup, false] ]
 
 Resources:
   CreateLambda:
@@ -174,16 +177,20 @@ Resources:
         Timeout : !Ref Timeout
         VpcConfig :
             SecurityGroupIds:
-              - !Ref CreateDaaSLambdaSecurityGroup
+              - !If
+                - isSecurityGroupEnabled
+                - !Ref CreateDaaSLambdaSecurityGroup
+                - Fn::ImportValue:
+                    !Sub ${Entity}-lmd-common-sec-grp-${Environment}
             SubnetIds: 
               - !ImportValue
                 'Fn::Sub': '${Entity}-private-subnet-1'
               - !ImportValue
                 'Fn::Sub': '${Entity}-private-subnet-2'
 
-
   CreateDaaSLambdaSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
+    Condition: isSecurityGroupEnabled
     Properties:
       GroupDescription: Enable daas common lambda security group
       GroupName: !Sub ${Entity}-lmd-common-sec-grp-${Environment}
@@ -273,3 +280,8 @@ Outputs:
     Value: !Ref LambdaRole
     Export:
       Name: !Sub '${Name}-Role'
+  LambdaSecurityGroup:
+    Condition: isSecurityGroupEnabled
+    Value: !Ref CreateDaaSLambdaSecurityGroup
+    Export:
+      Name: !Sub ${Entity}-lmd-common-sec-grp-${Environment}

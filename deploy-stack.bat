@@ -15,6 +15,7 @@ SET environment=%4
 SET region=%5
 SET serviceType=%6
 SET lambdaName=%7
+SET secretStr=%7
 SET lambdaVersion=%8
 SET stackName=stk-%serviceType%-%application%
 SET commonS3Folder=%entity%-s3-%accountId%-%region%-common-artifacts-%environment%

@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Aurora Postgress Serverless Secret Manager for data lake as a service - client (DaaS - Client)
+
+# Required Parameter: Environment
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  SecretString:
+    Type: String
+    Default: '{"username": "xxx", "password": "xxx!", "endpoint": "xxx", "url":"jdbc:postgresql://xxx:5432/daas","port":"5432"}'
+# provide valid credentials above to store the postgress username password, endpoint, url and port)
+
+# Resources
+Resources:
+  CreateDaaSClientPgsrvlsScrtMgr:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        Description: !Sub Aurora Postgress secrets manaer for ${Entity} daas client 
+        Name: !Sub ${Entity}-smgr-daas-client-pgsrvls
+        SecretString: !Ref SecretString
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/smgr/scripts/template/cft-smgr-common-template.yml
+      TimeoutInMinutes: '60'

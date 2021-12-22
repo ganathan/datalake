@@ -9,6 +9,7 @@ environment=$4
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ]  && [ ! -z "$environment" ] && [ ! -z "$region" ]
 then
     # Deploy the VPC
+    # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region vpc
     # sh ../deploy-stack.sh $entity $accountId daas-core $environment $region vpc
     # sleep 90
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region ngw

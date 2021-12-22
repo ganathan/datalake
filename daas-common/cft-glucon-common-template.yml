@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Common Glue Connection Cloudformation Template
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+    Default: us-west-2c
+  Application:
+    Type: String
+    Default: daas
+  CostCenter:
+    Type: String
+    Default: 55100
+  Description:
+    Type: String
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  Name:
+    Type: String
+  Project:
+    Type: String
+    Default: daas
+  SecretManagerName:
+    Type: String
+  SecurityGroup:
+    Type: String
+  SubnetId:
+    Type: String
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+
+Resources:
+  CreateDaaSCleintGlueJDBCConn:
+    Type: AWS::Glue::Connection
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      ConnectionInput:
+        ConnectionProperties:
+          Name: !Sub ${Name}-${Environment}
+          Type: JDBC
+          JDBC_CONNECTION_URL: !Sub '{{resolve:secretsmanager:${SecretManagerName}:SecretString:url}}'
+          USERNAME: !Sub '{{resolve:secretsmanager:${SecretManagerName}:SecretString:username}}'
+          PASSWORD: !Sub '{{resolve:secretsmanager:${SecretManagerName}:SecretString:password}}'
+        ConnectionType: JDBC
+        Description: !Ref Description
+        Name: !Sub ${Name}-${Environment}
+        PhysicalConnectionRequirements:
+          AvailabilityZone: !Ref AvailabilityZone
+          SecurityGroupIdList:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetId
+
+Outputs:
+  GlueJdbcConnName:
+    Value: !Ref CreateDaaSCleintGlueJDBCConn
+    Export:
+      Name: !Sub '${Name}'

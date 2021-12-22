@@ -9,6 +9,7 @@ Parameters:
   Environment:
     Type: String
     Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
 
 # Create Resources
 Resources:

@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Secret Manager Cloudformation Template
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: 55100
+  Description:
+    Type: String
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  Name:
+    Type: String
+  Project:
+    Type: String
+    Default: daas
+  SecretString:
+    Type: String
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+
+Resources:
+  CreateSecretsManager:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub ${Name}-${Environment}
+      Description: !Sub ${Description} for ${Environment}
+      SecretString: !Ref SecretString
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub '${Name}-${Environment}'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+Outputs:
+  SecretsManagerName:
+    Value: !Ref CreateSecretsManager
+    Export:
+      Name: !Sub '${Name}-${Environment}'

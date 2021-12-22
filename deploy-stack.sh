@@ -7,9 +7,12 @@ environment=$4
 region=$5
 serviceType=$6
 lambdaVersion=$7
+secretString=$7
 stackName=stk-$serviceType-$application
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 type=update
+
+echo $secretString
 
 # Check if parameters are defined
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$application" ] && [ ! -z "$environment" ] && [ ! -z "$region" ] && [ ! -z "$serviceType" ] 
@@ -70,7 +73,7 @@ then
 
     if [ "$serviceType" == "lmd" ]
     then
-        # create the cloudformation stack
+        # create or update the cloudformation stack
         aws cloudformation $type-stack \
             --stack-name $stackName-$environment \
             --region $region \
@@ -79,7 +82,7 @@ then
                         ParameterKey=LambdaZipFileName,ParameterValue=$stackName/$serviceType-$application-$lambdaVersion.zip \
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
     else
-        # create the cloudformation stack
+        # create or update the cloudformation stack
         aws cloudformation $type-stack \
             --stack-name $stackName-$environment \
             --region $region \

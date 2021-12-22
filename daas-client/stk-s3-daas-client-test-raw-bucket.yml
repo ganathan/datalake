@@ -33,7 +33,13 @@ Resources:
                   Principal: "*"
                   Action:
                     - "s3:GetObject"
+                    - "s3:GetObjectAcl"
+                    - "s3:GetBucketPolicy"
                     - "s3:PutObject"
+                    - "s3:PutObjectAcl"
+                    - "s3:PutBucketPolicy"
+                    - "s3:DeleteObject"
+                    - "cloudformation:*"
                   Resource:
                     - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
                     - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}/*

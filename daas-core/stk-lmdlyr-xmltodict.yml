@@ -8,6 +8,8 @@ Parameters:
     Default: ganesh
   Environment:
     Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
   Name:
     Type: String
     Default: xmltodict
