@@ -199,7 +199,7 @@ def lambda_handler(event, context):
                         target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
                         crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
                         table_name = domain_name.replace('-','_')
-                        result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values)
+                        result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values)
                         # create_cloudwatch_event(crawler_name)
                         print(result)
                 else:

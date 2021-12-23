@@ -63,7 +63,7 @@ def add_table_partitions(glue_db_name, table_name, partitions, partition_values)
         # Extract the existing storage descriptor and Create custom storage descriptor with new partition location
         storage_descriptor = get_table_response['Table']['StorageDescriptor']
         custom_storage_descriptor = copy.deepcopy(storage_descriptor)
-        custom_storage_descriptor['Location'] = storage_descriptor['Location'] + "/".join(partitions) + '/'
+        custom_storage_descriptor['Location'] = storage_descriptor['Location'] + partitions + '/'
 
         print('inside add table partition ' + table_name)
         print(custom_storage_descriptor)
@@ -162,17 +162,16 @@ def lambda_handler(event, context):
     init()
     print(event)
     try:
-        partition_values=[]
-        glue_db_name = json.dumps(event['glue_db_name']).strip('"')
-        lakeformation_role_name = json.dumps(event['lakeformation_role_name']).strip('"')
-        target_lambda_name = json.dumps(event['target_lambda_name']).strip('"')
-        target_lambda_arn = json.dumps(event['target_lambda_arn']).strip('"')
-        crawler_name = json.dumps(event['crawler_name']).strip('"')
-        source_file_path = json.dumps((event['source_file_path'])).strip('"')
-        domain_name = json.dumps(event['domain_name']).strip('"')
-        table_name = json.dumps(event['table_name']).strip('"')
-        partitions = json.dumps(event['partitions']).strip('"')
-        partition_values.append(json.dumps(event['partition_values']).strip('"'))
+        glue_db_name = event['glue_db_name']
+        lakeformation_role_name = event['lakeformation_role_name']
+        target_lambda_name = event['target_lambda_name']
+        target_lambda_arn = event['target_lambda_arn']
+        crawler_name = event['crawler_name']
+        source_file_path = event['source_file_path']
+        domain_name = event['domain_name']
+        table_name = event['table_name']
+        partitions = event['partitions']
+        partition_values=event['partition_values']
         if crawler_exits(crawler_name):
             print('1a')
             add_table_partitions(glue_db_name, table_name, partitions, partition_values)
