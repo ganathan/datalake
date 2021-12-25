@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Security Group Common CloudFormation Stack
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: 55100
+  Description:
+    Type: String
+    Default: Default Security Group
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  Name:
+    Type: String
+    Default: daas-sgrp
+  Project:
+    Type: String
+    Default: daas
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+
+Resources:
+  CreateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref Description
+      GroupName: !Sub ${Name}
+      VpcId: !ImportValue
+        Fn::Sub: "${Entity}-vpc"
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Entity
+          Value: !Ref Entity
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub ${Name}
+        - Key: Project
+          Value: !Ref Project
+        - Key: Support
+          Value: !Ref Support
+
+  CreateSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: CreateSecurityGroup
+    Properties:
+      GroupId: !Ref CreateSecurityGroup
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      SourceSecurityGroupId: !Ref CreateSecurityGroup
+
+Outputs:
+  SgrpStackName:
+    Description: Secruity Group Stack Name
+    Value: !Sub '${AWS::StackName}'
+    Export:
+      Name: !Sub '${Name}-stack'
+  SgrpName:
+    Description: Security Group Name
+    Value: !Ref CreateSecurityGroup
+    Export:
+      Name: !Sub '${Name}'

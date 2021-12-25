@@ -17,14 +17,14 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
+        Description: !Sub Glue Connection for Aurora Postgress Serverless DB in %{Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
-        Description: !Sub Glue Connection for Aurora Postgress Serverless DB in %{Environment}
         Name: !Sub ${Entity}-glucon-daas-client-pgsrvls
         SecretManagerName: !Sub '${Entity}-smgr-daas-client-pgsrvls-${Environment}'
+        SecurityGroup: sg-0f3e2e5679277a737
         SubnetId: 
           !ImportValue
               'Fn::Sub': '${Entity}-private-subnet-2'
-        SecurityGroup: sg-0f3e2e5679277a737
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/glucon/scripts/template/cft-glucon-common-template.yml
       TimeoutInMinutes: '60'

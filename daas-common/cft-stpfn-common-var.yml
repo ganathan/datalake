@@ -1,0 +1,5 @@
+DefinitionSubstitutions:
+  Entity: 
+    Fn::Sub: ${Entity}
+  Environment:
+    Fn::Sub: ${Environment}

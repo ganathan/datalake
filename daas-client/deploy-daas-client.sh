@@ -22,10 +22,14 @@ then
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region s3
     # sh ../deploy-stack.sh $entity $accountId daas-client-test-raw-bucket $environment $region s3
     # sh ../deploy-stack.sh $entity $accountId daas-client-test-cur-bucket $environment $region s3
-
+    # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region sgrp
+    # Deploy common security groups
+    # sh ../deploy-stack.sh $entity $accountId lmd-default $environment $region sgrp
+    sh ../deploy-stack.sh $entity $accountId ec2-default $environment $region sgrp  
+    sh ../deploy-stack.sh $entity $accountId rds-pgrs-default $environment $region sgrp    
     # Deploy the metadata generator lambda
-    sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
-    sh ../deploy-stack.sh $entity $accountId metadata-generator $environment $region lmd 1
+    # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
+    # sh ../deploy-stack.sh $entity $accountId metadata-generator $environment $region lmd 1
     # Deploy the secrets manager for postgres srvlss
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region smgr
     # sh ../deploy-stack.sh $entity $accountId daas-client-pgsrvls $environment $region smgr

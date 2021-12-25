@@ -30,16 +30,29 @@ then
         current_path=$parent_path
     fi
 
-    # Copy the s3 bucket to the common deploy folder
-    aws s3 cp $current_path/$templateName-template.yml \
-       s3://$commonS3Bucket/$serviceType/scripts/template/$templateName-template.yml
+    if [ "$serviceType" == "tag" ]
+    then
+        # Copy the tags to the common deploy folder
+        aws s3 cp $current_path/$templateName-var.yml \
+            s3://$commonS3Bucket/$serviceType/scripts/template/$templateName-var.yml
+    else
+        # Copy the s3 bucket to the common deploy folder
+        aws s3 cp $current_path/$templateName-template.yml \
+            s3://$commonS3Bucket/$serviceType/scripts/template/$templateName-template.yml
+    fi
 
     if [ "$serviceType" == "lmd" ]
     then
         # Copy the environment variable to the common deploy folder
         aws s3 cp $current_path/$templateName-env-var.yml \
           s3://$commonS3Bucket/$serviceType/scripts/template/$templateName-env-var.yml    
+    elif [ "$serviceType" == "stpfn" ]
+    then
+        # Copy the variable to the common deploy folder
+        aws s3 cp $current_path/$templateName-var.yml \
+          s3://$commonS3Bucket/$serviceType/scripts/template/$templateName-var.yml           
     fi
+
 
     # Switch back to parent directory
     if ! echo $parent_path | grep -p "daas-common"; then

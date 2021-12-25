@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Step Function Common CloudFormation Stack
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  Bucket:
+    Type: String
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: 55100
+  Description:
+    Type: String
+    Default: Default Security Group
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  Key:
+    Type: String
+  LogLevel:
+    Type: String
+    Default: ERROR
+  Name:
+    Type: String
+    Default: daas-sgrp
+  Project:
+    Type: String
+    Default: daas
+  StepFnVarFileName:
+    Type: String
+    Default: template/cft-stpfn-common-var.yml
+  StepMachineType:
+    Type: String
+    Default: STANDARD 
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+  TagsVarFileName:
+    Type: String
+    Default: template/cft-tag-common-var.yml
+
+Resources:
+  CreateStepFunction:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionS3Location: 
+        Bucket: !Ref Bucket
+        Key: !Ref Key
+      Fn::Transform:
+        Name: AWS::Include
+        Parameters:
+          Location:
+            Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/stpfn/scripts/${StepFnVarFileName}'
+      RoleArn: !GetAtt [ CreateSMExecutionRole, Arn ]
+      StateMachineName: !Ref Name
+      StateMachineType: !Ref StepMachineType
+      Fn::Transform:
+        Name: AWS::Include
+        Parameters:
+          Location:
+            Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/tag/scripts/${TagsVarFileName}'
+
+  CreateSMExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub rle-${Name}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - events.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub plc-${Entity}-common-stepfn
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Sid: "LambdaInvokeAccess"
+                Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+              - 
+                Sid: "AllowLogWriteAccess"
+                Effect: Allow
+                Action: 
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+
+
+Outputs:
+  StpFnStackName:
+    Description: Step Funciton Statemachine Stack Name
+    Value: !Sub '${AWS::StackName}'
+    Export:
+      Name: !Sub '${Name}-stack'
+  StpFnName:
+    Description: Step Funciton Statemachine Name
+    Value: !Ref CreateSMExecutionRole
+    Export:
+      Name: !Sub '${Name}'
+  StpFnRole:
+    Description: Step Function Statemachine Role
+    Value: !Ref CreateSMExecutionRole
+    Export:
+      Name: !Sub '${Name}-Role'

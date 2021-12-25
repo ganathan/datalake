@@ -23,6 +23,7 @@ then
     then
       echo "common bucket not found! creating the common bucket"
       sh ../daas-common/deploy-template.sh $entity $accountId $environment $region $serviceType
+      sh ../daas-common/deploy-template.sh $entity $accountId $environment $region tag
     else
       echo "common bucket found!!"
     fi
@@ -58,6 +59,18 @@ then
         # Copy layer zip file to common stack folder
         aws s3 cp $application.zip \
             s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$application.zip
+    elif [ "$serviceType" == "stpfn" ]
+    then
+        # Copy the var file to the common stack folder only when it exists
+        file=$stackName-var.yml
+        if [[ -f "$file" ]]; then
+            aws s3 cp $file  \
+                s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName-var.yml
+        fi
+
+        #Copy the statemachine json file to common stack folder 
+        aws s3 cp $serviceType-$application.json \
+            s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$serviceType-$application.json
     fi
 
     # Copy the s3 bucket to the common deploy folder
@@ -80,6 +93,15 @@ then
             --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
             --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
                         ParameterKey=LambdaZipFileName,ParameterValue=$stackName/$serviceType-$application-$lambdaVersion.zip \
+            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+    elif [ "$serviceType" == "stpfn" ]
+    then
+        # create or update the cloudformation stack
+        aws cloudformation $type-stack \
+            --stack-name $stackName-$environment \
+            --region $region \
+            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
     else
         # create or update the cloudformation stack

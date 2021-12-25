@@ -19,8 +19,9 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties :
       Parameters:
+        Entity: !Ref Entity
         Environment: !Ref Environment
-        Name: !Sub ${Name}-${Environment}
         LayerName: !Sub ${Name}
+        Name: !Sub ${Name}-${Environment}        
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmdlyr/scripts/template/cft-lmdlyr-common-template.yml
       TimeoutInMinutes : '60'

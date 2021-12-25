@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Invoker Lambda for data lake as a service - core (DaaS - Core)
+Description: Excel processor Lambda for data lake as a service - core (DaaS - Core)
 
 Parameters:
   Entity:
@@ -13,34 +13,31 @@ Parameters:
     Type: String
 
 Resources:
-  CreateDaaSCoreInvkLambda:
+  CreateDaaSCoreExlProcLambda:
     Type: 'AWS::CloudFormation::Stack'
     Properties :
       Parameters:
-        Description: !Sub Lambda Invoker for Datalake as a Service deployed in ${Environment}
+        Description: !Sub Excel file processor for Datalake as a Service deployed in ${Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
         EnableOpenPyXmlLayer: true
         EnablePandasLayer: true
         EnableXmlToDictLayer: true
-        HandlerName: lmd-ingest-invoker.lambda_handler
+        HandlerName: lmd-excel-processor.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
-        LambdaEnvVarFileName: !Sub stacks/stk-lmd-ingest-invoker/stk-lmd-ingest-invoker-env-var.yml
+        LambdaEnvVarFileName: !Sub stacks/stk-lmd-excel-processor/stk-lmd-excel-processor-env-var.yml
         MemorySize: 128 
-        Name: !Sub ${Entity}-lmd-ingest-invoker-${Environment}
-        SqsEventTriggerArn: 
-          Fn::ImportValue:
-            !Sub "${Entity}-sqs-ingest-daas-core-${Environment}-arn"
+        Name: !Sub ${Entity}-lmd-excel-processor-${Environment}
         Timeout: 120
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 
-  CreateDaaSMetadataInvkPolicy:
+  CreateDaaSCoreExlProcPolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
       Roles:
-        - !GetAtt CreateDaaSCoreInvkLambda.Outputs.LambdaRole
-      PolicyName: plc-inline-lmd-ingest-invk
+        - !GetAtt CreateDaaSCoreExlProcLambda.Outputs.LambdaRole
+      PolicyName: plc-inline-exl-proc
       PolicyDocument:
         Version: "2012-10-17"
         Statement:

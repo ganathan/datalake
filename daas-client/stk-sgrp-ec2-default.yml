@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Default Security Group for EC2 in data lake as a service - core (DaaS - Client)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+     Type: String
+     Default: dev
+     AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateDfltLmdSgrpForDaaSClient:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Description: Default EC2 secruity group for Daas Client      
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        Name: !Sub '${Entity}-sgrp-ec2-default-${Environment}'
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sgrp/scripts/template/cft-sgrp-common-template.yml
+      TimeoutInMinutes: '60'

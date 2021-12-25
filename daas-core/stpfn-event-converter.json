@@ -1,0 +1,92 @@
+{
+    "Comment": "A event processor pipeline",
+    "StartAt": "Event process decider",
+    "States": {
+      "Event process decider": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.file_type",
+            "StringEquals": "xml",
+            "Next": "XML processor lambda"
+          },
+          {
+            "Variable": "$.file_type",
+            "StringEquals": "excel",
+            "Next": "Excel processor lambda"
+          },
+          {
+            "Variable": "$.file_type",
+            "StringEquals": "json",
+            "Next": "json processor lambda"
+          }
+        ]
+      },
+      "XML processor lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-xml-processor-${Environment}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      },
+      "Excel processor lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-excel-processor-${Environment}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      },
+      "json processor lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-json-processor-${Environment}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      }
+    }
+  }

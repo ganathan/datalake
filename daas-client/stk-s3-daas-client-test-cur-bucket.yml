@@ -31,7 +31,8 @@ Resources:
             Statement:
                 - Sid: Allow DaaS Core Role access
                   Effect: Allow
-                  Principal: "*"
+                  Principal:
+                    AWS: "arn:aws:iam::*:role/rle-${Entity}-lmd-curation-invoker-${Environment}"
                   Action:
                     - "s3:GetObject"
                     - "s3:GetBucketPolicy"
@@ -41,4 +42,14 @@ Resources:
                   Resource:
                     - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
                     - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}/*
+                - Sid: Deny insecure access
+                  Effect: Deny
+                  Principal: "*"
+                  Action: "*"
+                  Resource:
+                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
+                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}/*
+                  Condition:
+                    Bool:
+                      "aws:SecureTransport": false
 

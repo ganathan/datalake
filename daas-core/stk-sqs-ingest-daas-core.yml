@@ -15,6 +15,7 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
+        Entity: !Ref Entity
         Environment: !Sub '${Environment}'
         Name: !Sub '${Entity}-sqs-ingest-daas-core-${Environment}'
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sqs/scripts/template/cft-sqs-common-template.yml

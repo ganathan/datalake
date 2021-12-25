@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Step Function state machine for event converter in data lake as a service - core (DaaS - Client)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+     Type: String
+     Default: dev
+     AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateStpfnForEvntConverter:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Bucket: !Sub '${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}'
+        Description: Step Function state machine for event converter in Daas Client      
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        Key: !Sub stpfn/scripts/stacks/stk-stpfn-event-converter/stpfn-event-converter.json
+        Name: !Sub '${Entity}-stpfn-event-converter-${Environment}'
+        StepFnVarFileName: !Sub stacks/stk-stpfn-event-converter/stk-stpfn-event-converter-var.yml
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/stpfn/scripts/template/cft-stpfn-common-template.yml
+      TimeoutInMinutes: '60'

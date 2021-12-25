@@ -11,7 +11,7 @@ Parameters:
   CostCenter:
     Type: String
     Default: 55100
-  CreateSecurityGroup:
+  CustomSecurityGroup:
     Type: String
     Default: false
   Description:
@@ -101,7 +101,7 @@ Conditions:
   isLambdaS3EventEnabled: !Not [ !Equals [!Ref S3EventTriggerArn, false] ]
   isLambdaSQSEventEnabled: !Not [ !Equals [!Ref SqsEventTriggerArn, false] ]
   isVpcConfigEnabled: !Equals [!Ref EnableVpcConfig, true]
-  isSecurityGroupEnabled: !Not [ !Equals [!Ref CreateSecurityGroup, false] ]
+  isSecurityGroupProvided: !Not [ !Equals [!Ref CustomSecurityGroup, false] ]
 
 Resources:
   CreateLambda:
@@ -178,24 +178,15 @@ Resources:
         VpcConfig :
             SecurityGroupIds:
               - !If
-                - isSecurityGroupEnabled
-                - !Ref CreateDaaSLambdaSecurityGroup
+                - isSecurityGroupProvided
+                - !Ref CustomSecurityGroup
                 - Fn::ImportValue:
-                    !Sub ${Entity}-lmd-common-sec-grp-${Environment}
+                    !Sub ${Entity}-sgrp-lmd-default-${Environment}
             SubnetIds: 
               - !ImportValue
                 'Fn::Sub': '${Entity}-private-subnet-1'
               - !ImportValue
                 'Fn::Sub': '${Entity}-private-subnet-2'
-
-  CreateDaaSLambdaSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Condition: isSecurityGroupEnabled
-    Properties:
-      GroupDescription: Enable daas common lambda security group
-      GroupName: !Sub ${Entity}-lmd-common-sec-grp-${Environment}
-      VpcId: !ImportValue
-        Fn::Sub: "${Entity}-vpc"
 
   LambdaRole:
     Type: "AWS::IAM::Role"
@@ -273,15 +264,12 @@ Resources:
 
 Outputs:
   LamdbaFunctionARN:
+    Description: Lambda Arn
     Value: !GetAtt CreateLambda.Arn
     Export:
       Name: !Sub '${Name}-ARN'
   LambdaRole:
+    Description: Lambda Role
     Value: !Ref LambdaRole
     Export:
       Name: !Sub '${Name}-Role'
-  LambdaSecurityGroup:
-    Condition: isSecurityGroupEnabled
-    Value: !Ref CreateDaaSLambdaSecurityGroup
-    Export:
-      Name: !Sub ${Entity}-lmd-common-sec-grp-${Environment}

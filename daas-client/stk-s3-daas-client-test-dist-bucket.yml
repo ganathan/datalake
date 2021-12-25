@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Test Raw bucket for data lake as a service - client (DaaS - Client)
+Description: Test Distribution bucket for data lake as a service - client (DaaS - Client)
 
 # Required Parameters: Environment
 Parameters:
@@ -12,27 +12,27 @@ Parameters:
 
 # Create Resources
 Resources:
-  CreateDaaSRawBucket:
+  CreateDaaSCurBucket:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         Environment: !Sub ${Environment}
-        Name: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket
+        Name: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-dist-bucket
         DenyPolicyAccess: false
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/s3/scripts/template/cft-s3-common-template.yml
       TimeoutInMinutes: '60'
 
-  CreateDaaSRawBucketPolicy:
+  CreateDaaSCurBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
-    DependsOn: CreateDaaSRawBucket
+    DependsOn: CreateDaaSCurBucket
     Properties:
-        Bucket: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
+        Bucket: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-dist-bucket-${Environment}
         PolicyDocument:
             Statement:
                 - Sid: Allow DaaS Core Role access
                   Effect: Allow
-                  Principal: 
-                    AWS: "arn:aws:iam::*:role/rle-${Entity}-lmd-ingest-invoker-${Environment}"
+                  Principal:
+                    AWS: "arn:aws:iam::*:role/rle-${Entity}-lmd-distrib-invoker-${Environment}"
                   Action:
                     - "s3:GetObject"
                     - "s3:GetBucketPolicy"
@@ -40,15 +40,16 @@ Resources:
                     - "s3:PutBucketPolicy"
                     - "s3:DeleteObject"
                   Resource:
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}/*
+                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-dist-bucket-${Environment}
+                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-dist-bucket-${Environment}/*
                 - Sid: Deny insecure access
                   Effect: Deny
                   Principal: "*"
                   Action: "*"
                   Resource:
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}/*
+                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-dist-bucket-${Environment}
+                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-dist-bucket-${Environment}/*
                   Condition:
                     Bool:
                       "aws:SecureTransport": false
+
