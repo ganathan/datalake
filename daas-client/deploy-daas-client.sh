@@ -5,10 +5,48 @@ accountId=$2
 region=$3
 environment=$4
 
+
+deploy_stack(){
+    # process the arguments
+    service_type=$1
+    app=$2
+    lambda_version=$3
+
+    if [ "$app" == "" ]
+    then
+        $app="daas-client"
+    fi
+
+    # call the common template
+    sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $service_type
+
+    if [ "$serviceType" != "tag" ]
+    then
+        # call the child stack
+        sh ../deploy-stack.sh $entity $accountId $region $environment $service_type $app $lambda_version
+    fi
+}
+
 # Check if parameters are defined
-if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$environment" ] && [ ! -z "$region" ] 
+if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ] 
 then
-    # Deploy the VPC
+
+    # deploy_stack tag
+    # deploy_stack vpc
+    # sleep 90
+    # deploy_stack ngw
+    # deploy_stack s3 daas-client-athena-log
+    # deploy_stack s3 daas-client-test-raw-bucket
+    # deploy_stack s3 daas-client-test-cur-bucket
+    # deploy_stack s3 daas-client-test-dist-bucket
+    # deploy_stack sgrp ec2-default
+    # deploy_stack sgrp rds-pgrs-default
+    # deploy_stack sgrp lmd-default
+    # deploy_stack smgr daas-client-pgsrvls 
+    # deploy_stack glucon daas-client-pgsrvls 
+    # deploy_stack lmd metadata-generator 1
+    # deploy_stack lmd glujb-sync-generator 1
+
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region vpc
     # sh ../deploy-stack.sh $entity $accountId daas-client $environment $region vpc
     # sleep 90

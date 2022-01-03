@@ -1,9 +1,0 @@
-Environment:
-  Variables:
-    ENV_VAR_ENVIRONMENT:
-      Fn::Sub: ${Environment}
-    ENV_VAR_LOGGING_LEVEL: "info"
-    ENV_VAR_GLUE_CONNECTION: 
-      Fn::Sub: "${Entity}-glucon-daas-client-pgsrvls-${Environment}"
-    ENV_VAR_GLUE_SERVICE_ROLE:
-      Fn::Sub: "rle-metadata-generator-service-role-${Environment}"

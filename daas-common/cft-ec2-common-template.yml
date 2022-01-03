@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS EC2 Common CloudFormation Stack
+
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: 55100
+  Description:
+    Type: String
+    Default: Elastic Cloud Compute Service
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  InstanceType:
+    Type: String
+    Default: t2.micro
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.    
+  Name:
+    Type: String
+    Default: daas-ec2
+  Project:
+    Type: String
+    Default: daas
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+
+Mappings:
+  RegionMap:
+    us-west-2:
+     "AMI": "ami-0518bb0e75d3619ca"
+
+Resources:
+  CreateEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SubnetId:
+        - !ImportValue
+            'Fn::Sub': '${Entity}-public-subnet-1'      
+      SecurityGroupIds: 
+        - Fn::ImportValue:
+            !Sub ${Entity}-sgrp-ec2-default-${Environment}
+      Fn::Transform:
+        Name: AWS::Include
+        Parameters:
+          Location:
+            Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/tag/scripts/${TagsVarFileName}'
+
+
+Outputs:
+  SgrpStackName:
+    Description: EC2 Stack Name
+    Value: !Sub '${AWS::StackName}'
+    Export:
+      Name: !Sub '${Name}-stack'
+  SgrpName:
+    Description: EC2 Instance Name
+    Value: !Ref CreateEC2Instance
+    Export:
+      Name: !Sub '${Name}'
+  PublicIpAddr:
+    Description: EC2 Instance Public Ip
+    Value: !GetAtt CreateEC2Instance.PublicIp
+    Export:
+      Name: !Sub '${Name}-ip'
+

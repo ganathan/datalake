@@ -5,6 +5,8 @@ if [%2]==[] goto usage
 if [%3]==[] goto usage
 if [%4]==[] goto usage
 
+
+
 REM Check if parameters are defined
 SET application=%1
 SET environment=%2

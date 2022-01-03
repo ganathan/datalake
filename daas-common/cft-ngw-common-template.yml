@@ -34,23 +34,11 @@ Resources:
         AllocationId: !GetAtt AttachElasticIP.AllocationId
         SubnetId:
           Fn::ImportValue: !Sub '${Entity}-public-subnet-1'
-        Tags:
-          - Key: Application
-            Value: !Ref Application
-          - Key: BusinessUnit
-            Value: !Ref BusinessUnit
-          - Key: CostCenter
-            Value: !Ref CostCenter
-          - Key: Entity
-            Value: !Ref Entity
-          - Key: Environment
-            Value: !Ref Environment
-          - Key: Name
-            Value: !Sub ${Entity}-ngw
-          - Key: Project
-            Value: !Ref Project
-          - Key: Support
-            Value: !Ref Support
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location:
+              Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/tag/scripts/${TagsVarFileName}'
 
   AttachElasticIP:
     Type: AWS::EC2::EIP

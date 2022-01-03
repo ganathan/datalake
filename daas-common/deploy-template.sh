@@ -2,8 +2,8 @@
 # set variables
 entity="$1"
 accountId="$2"
-environment="$3"
-region="$4"
+region="$3"
+environment="$4"
 serviceType="$5"
 templateName=cft-$serviceType-common
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment

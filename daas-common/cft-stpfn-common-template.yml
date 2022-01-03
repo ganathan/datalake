@@ -102,7 +102,6 @@ Resources:
                   - "logs:PutLogEvents"
                 Resource: "arn:aws:logs:*:*:*"
 
-
 Outputs:
   StpFnStackName:
     Description: Step Funciton Statemachine Stack Name

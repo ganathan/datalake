@@ -71,23 +71,11 @@ Resources:
       CidrBlock: !Ref VpcCidrBlock
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      Tags:
-        - Key: Application
-          Value: !Ref Application
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
-          Value: !Ref CostCenter
-        - Key: Entity
-          Value: !Ref Entity        
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: Name
-          Value: !Ref Name
-        - Key: Project
-          Value: !Ref Project
-        - Key: Support
-          Value: !Ref Support
+      Fn::Transform:
+        Name: AWS::Include
+        Parameters:
+          Location:
+            Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/tag/scripts/${TagsVarFileName}'
 
   CreateVpcCidrBlock:
     Type: 'AWS::EC2::VPCCidrBlock'

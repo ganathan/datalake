@@ -10,21 +10,44 @@ deploy_stack(){
     # process the arguments
     service_type=$1
     app=$2
-    lambda_version=$2
+    lambda_version=$3
+
+    if [ "$app" == "" ]
+    then
+        $app="daas-core"
+    fi
 
     # call the common template
-    sh ../daas-common/deploy-template.sh $entity $accountId $environment $region $service_type
+    sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $service_type
 
-    # call the child stack
-    sh ../deploy-stack.sh $entity $accountId $app $environment $region $service_type $lambda_version
+    if [ "$serviceType" != "tag" ]
+    then
+        # call the child stack
+        sh ../deploy-stack.sh $entity $accountId $region $environment $service_type $app $lambda_version
+    fi
 }
 
 
 # Check if parameters are defined
-if [ ! -z "$entity" ] && [ ! -z "$accountId" ]  && [ ! -z "$environment" ] && [ ! -z "$region" ]
+if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ] 
 then
+
+    # deploy_stack tag
+    # deploy_stack vpc
+    # sleep 90
+    # deploy_stack ngw
+    # deploy_stack sqs ingest-daas-core 
+    # deploy_stack sgrp lmd-default
+    # deploy_stack lmdlyr xmltodict
+    deploy_stack lmd ingest-invoker 2
+    deploy_stack lmd json-processor 1
+    deploy_stack lmd xml-processor 1
+    # deploy_stack stpfn event-converter
+
+
+
     # Deploy the tag
-    sh ../daas-common/deploy-template.sh $entity $accountId $environment $region tag
+    # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region tag
     # Deploy the VPC
     # deploy_stack vpc daas-core
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region vpc
@@ -49,7 +72,7 @@ then
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
     # sh ../deploy-stack.sh $entity $accountId ingest-invoker $environment $region lmd 1
     # Deploy the step function
-    deploy_stack stpfn event-converter
+    # deploy_stack stpfn event-converter
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment>"
 fi
