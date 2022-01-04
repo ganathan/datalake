@@ -162,11 +162,31 @@ Resources:
             - Fn::ImportValue:
                 !Sub "${Entity}-lmdlyr-xmltodict-${Environment}-arn"
             - !Ref "AWS::NoValue"
-        Fn::Transform:
-          Name: AWS::Include
-          Parameters:
-            Location:
-              Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/tag/scripts/${TagsVarFileName}'
+        Tags:
+          - Key: Application
+            Value:
+              Fn::Sub: ${Application}
+          - Key: BusinessUnit
+            Value:
+              Fn::Sub: ${BusinessUnit}
+          - Key: CostCenter
+            Value:
+              Fn::Sub: ${CostCenter}
+          - Key: Entity
+            Value:
+              Fn::Sub: ${Entity}
+          - Key: Environment
+            Value:
+              Fn::Sub: ${Environment}
+          - Key: Name
+            Value:
+              Fn::Sub: ${Name}
+          - Key: Project
+            Value:
+              Fn::Sub: ${Project}
+          - Key: Support
+            Value:
+              Fn::Sub: ${Support}
         Timeout : !Ref Timeout
         VpcConfig :
             SecurityGroupIds:

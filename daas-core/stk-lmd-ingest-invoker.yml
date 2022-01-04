@@ -87,6 +87,12 @@ Resources:
             Resource:
               -  "arn:aws:logs:*:*:*:/aws-glue/*"
           -
+            Sid: "allowStepFunctionAccess"
+            Effect: "Allow"
+            Action: "states:StartExecution"
+            Resource:
+              - "arn:aws:states:*:*:stateMachine:*"
+          -
             Sid: "allowOtherAccess"
             Effect: "Allow"
             Action:

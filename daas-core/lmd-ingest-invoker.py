@@ -16,7 +16,7 @@ from io import StringIO
 def init():
     global s3, s3_client, stpfn_client, lambda_client, event_client, glue_client, glue_db_name 
     global lakeformation_role_name, target_lambda_name, daas_config, accountid
-    global region, processor_stepfn_arn
+    global region, event_converter_stepfn_arn
     stpfn_client = boto3.client('stepfunctions')
     s3_client = boto3.client('s3')
     s3 = boto3.resource('s3')
@@ -29,7 +29,7 @@ def init():
     glue_db_name = os.environ["ENV_VAR_DAAS_CORE_GLUE_DB"]
     lakeformation_role_name = os.environ["ENV_VAR_GLUE_SERVICE_ROLE"]
     target_lambda_name = os.environ["ENV_VAR_CLIENT_LAMBDA_NAME"]
-    processor_stepfn_arn = os.environ["ENV_VAR_PROC_STEP_FUNC_ARN"]
+    event_converter_stepfn_arn = os.environ["ENV_VAR_EVNT_CONVR_STEP_FUNC_ARN"]
 
  
 # -------------------------------------------------
@@ -159,14 +159,15 @@ def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path,
 # ----------------------------------------------------------
 # Invoke step function to convert the object
 # ----------------------------------------------------------
-def invoke_stepfunction(source_key,object_name,extention):
+def invoke_stepfunction(source_key,object_name,extension):
     params = {
         'bucket_name': source_key,
         'file_key': object_name,
-        'file_type': extention
+        'file_type': extension
     }
+
     response = stpfn_client.start_execution(
-        stateMachineArn=processor_stepfn_arn,
+        stateMachineArn=event_converter_stepfn_arn,
         input= json.dumps(params)
     )
     return response['Payload'].read()
@@ -199,10 +200,10 @@ def lambda_handler(event, context):
                             partition_values.append(value)
                         else:
                             partition_values.append(key)
-                    extention = object_name.split('.')[-1].lower() # get the file extension.
+                    extension = object_name.split('.')[-1].lower() # get the file extension.
                     path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
-                    if extention == 'xml' or extention == 'json' or extention == 'xls' or extention == 'xlsx':
-                        invoke_stepfunction(source_key,object_name,extention)
+                    if extension == 'xml' or extension == 'json' or extension == 'xls' or extension == 'xlsx':
+                        invoke_stepfunction(source_key,object_name,extension)
                     else:                   
                         fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
                         data_dict = fileObj['Body'].read()

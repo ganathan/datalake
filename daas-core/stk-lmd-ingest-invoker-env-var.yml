@@ -1,7 +1,7 @@
 Environment:
   Variables:
     ENV_VAR_ACCOUNT_ID:
-      Fn::Sub: ${AWS::AccountId}
+      Fn::Sub: "${AWS::AccountId}"
     ENV_VAR_CLIENT_LAMBDA_NAME: 
       Fn::Sub: "${Entity}-lmd-metadata-generator-${Environment}"
     ENV_VAR_DAAS_CONFIG_FILE: ".daas-config/config.json"
@@ -14,5 +14,5 @@ Environment:
     ENV_VAR_LOGGING_LEVEL: "info"
     ENV_VAR_REGION_NAME:
       Fn::Sub: ${AWS::Region}
-    ENV_VAR_PROC_STEP_FUNC_ARN:
-      Fn::Sub: "${Entity}-stpfn-event-converter-${Environment}"
+    ENV_VAR_EVNT_CONVR_STEP_FUNC_ARN:
+      Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-event-converter-${Environment}"
