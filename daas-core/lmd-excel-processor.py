@@ -12,18 +12,25 @@ from io import StringIO
 # -------------------------------------------------
 def convert_excel_to_csv(source_bucket, source_key, short_path, domain_name, object_name):
     s3_client = boto3.client('s3')
+    s3 = boto3.resource('s3')
     excel_file = s3_client.get_object(Bucket=source_bucket, Key=source_key)
+    print('reading excel')
     df_sheet  = pd.read_excel(excel_file['Body'].read(), index_col=0, engine='openpyxl')
+    print('converting to csv')
     csv_key = source_key.split('.')[0] + '.csv'
     csv_buffer = StringIO()
     df_sheet.to_csv(csv_buffer, sep="|")
     s3_client.put_object(Body=csv_buffer.getvalue(), Bucket=source_bucket, Key=csv_key)
-    
+    print('saving csv')
+
     # move the original xml file to raw folder
     domain_end_index = short_path.find(domain_name) + len(domain_name)
     new_source_key = short_path[0:domain_end_index] + '-daas-gen-raw' + short_path[domain_end_index:len(short_path)] + '/' + object_name
     copy_source = { 'Bucket': source_bucket, 'Key': source_key }
+    print('creating backup folder')
     result = s3.meta.client.copy(copy_source,source_bucket,new_source_key)
+    print('copying original file in backup folder')
+    print('deleting original file')
     s3_client.delete_object(
         Bucket=source_bucket, 
         Key=source_key
@@ -35,7 +42,8 @@ def convert_excel_to_csv(source_bucket, source_key, short_path, domain_name, obj
 # -------------------------------------------------
 def lambda_handler(event, context):
     try:
-        source_bucket = event['source_bucket_name']
+        print(event)
+        source_bucket = event['source_bucket']
         source_key = event['source_key']
         domain_name = event['domain_name']
         object_name = event['object_name']

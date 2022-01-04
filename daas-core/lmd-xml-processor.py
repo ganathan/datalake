@@ -16,6 +16,8 @@ from io import StringIO
 # Convert xml file to json
 # -------------------------------------------------
 def convert_xml_to_json(source_bucket, source_key, short_path, domain_name, object_name):
+    s3_client = boto3.client('s3')
+    s3 = boto3.resource('s3')
     xml_file = s3_client.get_object(Bucket=source_bucket, Key=source_key)
     data_dict = xmltodict.parse(xml_file['Body'].read())
     json_data = json.dumps(data_dict).replace('@','').replace('#text','text').replace('xmlns:','xmlns_').replace('xsi:','xsi_').replace('sdtc:','sdtc_')
@@ -35,7 +37,8 @@ def convert_xml_to_json(source_bucket, source_key, short_path, domain_name, obje
 # -------------------------------------------------
 def lambda_handler(event, context):
     try:
-        source_bucket = event['source_bucket_name']
+        print(event)
+        source_bucket = event['source_bucket']
         source_key = event['source_key']
         domain_name = event['domain_name']
         object_name = event['object_name']

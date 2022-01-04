@@ -32,13 +32,19 @@ Resources:
                 - Sid: Allow DaaS Core Role access
                   Effect: Allow
                   Principal: 
-                    AWS: "arn:aws:iam::*:role/rle-${Entity}-lmd-ingest-invoker-${Environment}"
+                    AWS: [
+                      "arn:aws:iam::*:role/rle-${Entity}-lmd-ingest-invoker-${Environment}",
+                      "arn:aws:iam::*:role/rle-${Entity}-lmd-excel-processor-${Environment}",
+                      "arn:aws:iam::*:role/rle-${Entity}-lmd-xml-processor-${Environment}"
+                    ],
                   Action:
                     - "s3:GetObject"
                     - "s3:GetBucketPolicy"
                     - "s3:PutObject"
                     - "s3:PutBucketPolicy"
                     - "s3:DeleteObject"
+                    - "s3:PutObjectAcl"
+                    - "s3:ListBucket"
                   Resource:
                     - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
                     - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}/*
