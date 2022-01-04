@@ -17,8 +17,8 @@
           },
           {
             "Variable": "$.extension",
-            "StringEquals": "json",
-            "Next": "json processor lambda"
+            "StringEquals": "xls",
+            "Next": "Excel processor lambda"
           }
         ]
       },
@@ -51,28 +51,6 @@
         "Parameters": {
           "Payload.$": "$",
           "FunctionName": "${LambdaArnString}:${Entity}-lmd-excel-processor-${Environment}"
-        },
-        "Retry": [
-          {
-            "ErrorEquals": [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException"
-            ],
-            "IntervalSeconds": 2,
-            "MaxAttempts": 6,
-            "BackoffRate": 2
-          }
-        ],
-        "End": true
-      },
-      "json processor lambda": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::lambda:invoke",
-        "OutputPath": "$.Payload",
-        "Parameters": {
-          "Payload.$": "$",
-          "FunctionName": "${LambdaArnString}:${Entity}-lmd-json-processor-${Environment}"
         },
         "Retry": [
           {

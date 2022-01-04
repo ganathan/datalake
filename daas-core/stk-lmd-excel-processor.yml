@@ -25,7 +25,6 @@ Resources:
         EnableXmlToDictLayer: true
         HandlerName: lmd-excel-processor.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
-        LambdaEnvVarFileName: !Sub stacks/stk-lmd-excel-processor/stk-lmd-excel-processor-env-var.yml
         MemorySize: 128 
         Name: !Sub ${Entity}-lmd-excel-processor-${Environment}
         Timeout: 120

@@ -25,7 +25,6 @@ Resources:
         EnableXmlToDictLayer: true
         HandlerName: lmd-xml-processor.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
-        LambdaEnvVarFileName: !Sub stacks/stk-lmd-xml-processor/stk-lmd-xml-processor-env-var.yml
         MemorySize: 128 
         Name: !Sub ${Entity}-lmd-xml-processor-${Environment}
         Timeout: 120

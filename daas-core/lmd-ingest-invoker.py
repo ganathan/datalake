@@ -159,19 +159,12 @@ def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path,
 # ----------------------------------------------------------
 # Invoke step function to convert the object
 # ----------------------------------------------------------
-def invoke_stepfunction(glue_db_name, lakeformation_role_name, target_lambda_name, target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values, extension):
+def invoke_stepfunction(source_bucket, source_key, domain_name, object_name, extension):
     params = {
-        'glue_db_name': glue_db_name,
-        'lakeformation_role_name': lakeformation_role_name,
-        'target_lambda_name': target_lambda_name,
-        'target_lambda_arn': target_lambda_arn,
-        'target_lambda_role_arn': target_lambda_role_arn,
-        'crawler_name': crawler_name,
-        'path': path,
+        'source_bucket': source_bucket,
+        'source_key': source_key,
         'domain_name': domain_name,
-        'table_name': table_name,
-        'partitions': partitions,
-        'partition_values': partition_values,
+        'object_name': object_name,
         'extension': extension
     }
 
@@ -191,38 +184,37 @@ def lambda_handler(event, context):
         try:
             for record in json.loads(event['Records'][0]['body'])['Records']:
                 source_bucket = record['s3']['bucket']['name']
-                partition_values=[]
-                #bu_name = source_bucket.split('-')[0:9][8]  # get the ninth item and assign it as the business unit name
                 source_key = urllib.parse.unquote_plus(record['s3']['object']['key'], encoding='utf-8')
-                object_name = source_key.split('/')[-1] # get the file name
                 domain_name = source_key.split('/')[0:2][1]  # get the second prefix and assign it as the domain name
+                object_name = source_key.split('/')[-1] # get the file name
                 short_path = source_key[0:source_key.rfind('/',0)] # get upto the file path
                 is_dot_folder_object = short_path.rfind('.',0)
                 is_ignore_object = short_path.find('-daas-gen-raw')
                 if object_name and is_dot_folder_object == -1 and is_ignore_object == -1:
-                    source_name = source_key.split('/')[0:1][0]  # get the first prefix and assign it as the source name
-                    partitions = source_key.split('/')[2:-1]  # Remove source name, domain name in the front and the key at the end
-                    for key in partitions:
-                        value = key.split('=')[1]
-                        print(value)
-                        if value:
-                            partition_values.append(value)
-                        else:
-                            partition_values.append(key)
                     extension = object_name.split('.')[-1].lower() # get the file extension.
-                    path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
-                    fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
-                    data_dict = fileObj['Body'].read()
-                    account_id = get_client_accountid(data_dict)
-                    region = get_client_region(data_dict)
-                    entity = get_client_entity_name(data_dict)
-                    target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
-                    target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
-                    crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
-                    table_name = domain_name.replace('-','_')
-                    if extension == 'xml' or extension == 'json' or extension == 'xls' or extension == 'xlsx':
-                        invoke_stepfunction(glue_db_name, lakeformation_role_name, target_lambda_name, target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values, extension)
+                    if extension == 'xml' or extension == 'xls' or extension == 'xlsx':
+                        invoke_stepfunction(source_bucket, source_key, domain_name, object_name, extension)
                     else:                   
+                        partition_values=[]
+                        source_name = source_key.split('/')[0:1][0]  # get the first prefix and assign it as the source name
+                        partitions = source_key.split('/')[2:-1]  # Remove source name, domain name in the front and the key at the end
+                        for key in partitions:
+                            value = key.split('=')[1]
+                            print(value)
+                            if value:
+                                partition_values.append(value)
+                            else:
+                                partition_values.append(key)
+                        path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
+                        fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
+                        data_dict = fileObj['Body'].read()
+                        account_id = get_client_accountid(data_dict)
+                        region = get_client_region(data_dict)
+                        entity = get_client_entity_name(data_dict)
+                        target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
+                        target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
+                        crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
+                        table_name = domain_name.replace('-','_')
                         result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values)
                         # create_cloudwatch_event(crawler_name)
                         print(result)
