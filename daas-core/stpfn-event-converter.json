@@ -6,17 +6,17 @@
         "Type": "Choice",
         "Choices": [
           {
-            "Variable": "$.file_type",
+            "Variable": "$.extension",
             "StringEquals": "xml",
             "Next": "XML processor lambda"
           },
           {
-            "Variable": "$.file_type",
-            "StringEquals": "excel",
+            "Variable": "$.extension",
+            "StringEquals": "xlsx",
             "Next": "Excel processor lambda"
           },
           {
-            "Variable": "$.file_type",
+            "Variable": "$.extension",
             "StringEquals": "json",
             "Next": "json processor lambda"
           }

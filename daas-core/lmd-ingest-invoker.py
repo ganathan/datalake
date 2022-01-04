@@ -159,11 +159,20 @@ def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path,
 # ----------------------------------------------------------
 # Invoke step function to convert the object
 # ----------------------------------------------------------
-def invoke_stepfunction(source_key,object_name,extension):
+def invoke_stepfunction(glue_db_name, lakeformation_role_name, target_lambda_name, target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values, extension):
     params = {
-        'bucket_name': source_key,
-        'file_key': object_name,
-        'file_type': extension
+        'glue_db_name': glue_db_name,
+        'lakeformation_role_name': lakeformation_role_name,
+        'target_lambda_name': target_lambda_name,
+        'target_lambda_arn': target_lambda_arn,
+        'target_lambda_role_arn': target_lambda_role_arn,
+        'crawler_name': crawler_name,
+        'path': path,
+        'domain_name': domain_name,
+        'table_name': table_name,
+        'partitions': partitions,
+        'partition_values': partition_values,
+        'extension': extension
     }
 
     response = stpfn_client.start_execution(
@@ -202,18 +211,18 @@ def lambda_handler(event, context):
                             partition_values.append(key)
                     extension = object_name.split('.')[-1].lower() # get the file extension.
                     path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
+                    fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
+                    data_dict = fileObj['Body'].read()
+                    account_id = get_client_accountid(data_dict)
+                    region = get_client_region(data_dict)
+                    entity = get_client_entity_name(data_dict)
+                    target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
+                    target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
+                    crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
+                    table_name = domain_name.replace('-','_')
                     if extension == 'xml' or extension == 'json' or extension == 'xls' or extension == 'xlsx':
-                        invoke_stepfunction(source_key,object_name,extension)
+                        invoke_stepfunction(glue_db_name, lakeformation_role_name, target_lambda_name, target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values, extension)
                     else:                   
-                        fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
-                        data_dict = fileObj['Body'].read()
-                        account_id = get_client_accountid(data_dict)
-                        region = get_client_region(data_dict)
-                        entity = get_client_entity_name(data_dict)
-                        target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
-                        target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
-                        crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
-                        table_name = domain_name.replace('-','_')
                         result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values)
                         # create_cloudwatch_event(crawler_name)
                         print(result)
