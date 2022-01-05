@@ -9,9 +9,6 @@ import openpyxl
 import pandas as pd
 from io import StringIO
 
-
-    
-
 # -------------------------------------------------
 # Convert xml file to json
 # -------------------------------------------------
