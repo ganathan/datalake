@@ -8,22 +8,22 @@ environment=$4
 
 deploy_stack(){
     # process the arguments
-    service_type=$1
+    serviceType=$1
     app=$2
-    lambda_version=$3
+    lambdaVersion=$3
 
-    if [ "$app" == "" ]
+    if [ -z "$app"]
     then
-        $app="daas-core"
+        app="daas-core"
     fi
 
     # call the common template
-    sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $service_type
+    sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $serviceType
 
     if [ "$serviceType" != "tag" ]
     then
         # call the child stack
-        sh ../deploy-stack.sh $entity $accountId $region $environment $service_type $app $lambda_version
+        sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion
     fi
 }
 

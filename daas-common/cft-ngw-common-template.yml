@@ -26,6 +26,9 @@ Parameters:
   Support:
     Type: String
     Default: nathan.ganesh@gmail.com
+  TagsVarFileName:
+    Type: String
+    Default: template/cft-tag-common-var.yml
 
 Resources:
   CreateNATGateway:

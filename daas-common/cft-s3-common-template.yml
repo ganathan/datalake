@@ -44,6 +44,9 @@ Parameters:
   Support:
     Type: String
     Default: nathan.ganesh@gmail.com
+  TagsVarFileName:
+    Type: String
+    Default: template/cft-tag-common-var.yml
 
 # check KMS Key, as it will accept only KMS key generated and exported via CF template.
 Conditions:

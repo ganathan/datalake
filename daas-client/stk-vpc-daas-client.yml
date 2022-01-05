@@ -9,6 +9,9 @@ Parameters:
      Type: String
      Default: dev
      AllowedValues: [dev, tst, int, uat, prd, poc]
+  Region:
+    Type: String
+    Default: us-west-2
 
 Resources:
   CreateVPCForDaaS:
@@ -20,12 +23,12 @@ Resources:
         Name: !Sub ${Entity}-vpc-daas-client-${Environment}
         PrivateSubnet1Cidr: 10.1.0.0/24
         PrivateSubnet2Cidr: 10.1.16.0/24
-        PrivateSubnet1AZ: us-west-2d
-        PrivateSubnet2AZ: us-west-2c
+        PrivateSubnet1AZ: !Sub ${Region}d
+        PrivateSubnet2AZ: !Sub ${Region}c
         PublicSubnet1Cidr: 10.1.129.0/24
         PublicSubnet2Cidr: 10.1.145.0/24
-        PublicSubnet1AZ: us-west-2a
-        PublicSubnet2AZ: us-west-2b
+        PublicSubnet1AZ: !Sub ${Region}a
+        PublicSubnet2AZ: !Sub ${Region}b
         VpcCidrBlock: 10.1.0.0/16
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/vpc/scripts/template/cft-vpc-common-template.yml
       TimeoutInMinutes: '60'

@@ -49,6 +49,9 @@ Parameters:
   Support:
     Type: String
     Default: nathan.ganesh@gmail.com
+  TagsVarFileName:
+    Type: String
+    Default: template/cft-tag-common-var.yml
   VpcCidrBlock:
     Type: String
     Default: 10.31.0.0/16

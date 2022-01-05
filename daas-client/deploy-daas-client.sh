@@ -8,22 +8,22 @@ environment=$4
 
 deploy_stack(){
     # process the arguments
-    service_type=$1
+    serviceType=$1
     app=$2
-    lambda_version=$3
+    lambdaVersion=$3
 
-    if [ "$app" == "" ]
+    if [ -z "$app"]
     then
-        $app="daas-client"
+        app="daas-client"
     fi
 
     # call the common template
-    sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $service_type
+    sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $serviceType
 
     if [ "$serviceType" != "tag" ]
     then
         # call the child stack
-        sh ../deploy-stack.sh $entity $accountId $region $environment $service_type $app $lambda_version
+        sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion
     fi
 }
 
@@ -32,7 +32,7 @@ if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "
 then
 
     # deploy_stack tag
-    # deploy_stack vpc
+    deploy_stack vpc
     # sleep 90
     # deploy_stack ngw
     # deploy_stack s3 daas-client-athena-log
@@ -63,8 +63,8 @@ then
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region sgrp
     # Deploy common security groups
     # sh ../deploy-stack.sh $entity $accountId lmd-default $environment $region sgrp
-    sh ../deploy-stack.sh $entity $accountId ec2-default $environment $region sgrp  
-    sh ../deploy-stack.sh $entity $accountId rds-pgrs-default $environment $region sgrp    
+    # sh ../deploy-stack.sh $entity $accountId ec2-default $environment $region sgrp  
+    # sh ../deploy-stack.sh $entity $accountId rds-pgrs-default $environment $region sgrp    
     # Deploy the metadata generator lambda
     # sh ../daas-common/deploy-template.sh $entity $accountId $environment $region lmd
     # sh ../deploy-stack.sh $entity $accountId metadata-generator $environment $region lmd 1

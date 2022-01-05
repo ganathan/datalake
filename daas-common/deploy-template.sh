@@ -58,6 +58,7 @@ then
     if ! echo $parent_path | grep -p "daas-common"; then
         cd $parent_path
     fi
+    
 else
   echo "Missing required parameter. Usage: deploy-template.sh <entity> <account id> <environment> <region> <service type>"
 fi
