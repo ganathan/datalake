@@ -5,6 +5,9 @@ Parameters:
   Application:
     Type: String
     Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
   CostCenter:
     Type: String
     Default: 55100
