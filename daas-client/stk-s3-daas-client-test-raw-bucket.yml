@@ -32,11 +32,10 @@ Resources:
                 - Sid: Allow DaaS Core Role access
                   Effect: Allow
                   Principal: 
-                    AWS: [
-                      "arn:aws:iam::*:role/rle-${Entity}-lmd-ingest-invoker-${Environment}",
-                      "arn:aws:iam::*:role/rle-${Entity}-lmd-excel-processor-${Environment}",
-                      "arn:aws:iam::*:role/rle-${Entity}-lmd-xml-processor-${Environment}"
-                    ],
+                    AWS:
+                      - !Sub arn:aws:iam::*:role/rle-${Entity}-lmd-ingest-invoker-${Environment}
+                      - !Sub arn:aws:iam::*:role/rle-${Entity}-lmd-excel-processor-${Environment}
+                      - !Sub arn:aws:iam::*:role/rle-${Entity}-lmd-xml-processor-${Environment}
                   Action:
                     - "s3:GetObject"
                     - "s3:GetBucketPolicy"

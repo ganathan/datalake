@@ -117,7 +117,8 @@ then
             --stack-name $stackName-$environment \
             --region $region \
             --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment    
+            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
+            --capabilities CAPABILITY_AUTO_EXPAND  
     fi
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <accountid> <region> <environment> <service type> <application> <<lambda version>>"

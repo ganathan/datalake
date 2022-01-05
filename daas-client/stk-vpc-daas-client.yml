@@ -23,12 +23,12 @@ Resources:
         Name: !Sub ${Entity}-vpc-daas-client-${Environment}
         PrivateSubnet1Cidr: 10.1.0.0/24
         PrivateSubnet2Cidr: 10.1.16.0/24
-        PrivateSubnet1AZ: !Sub ${Region}d
+        PrivateSubnet1AZ: !Sub ${Region}b
         PrivateSubnet2AZ: !Sub ${Region}c
         PublicSubnet1Cidr: 10.1.129.0/24
         PublicSubnet2Cidr: 10.1.145.0/24
-        PublicSubnet1AZ: !Sub ${Region}a
-        PublicSubnet2AZ: !Sub ${Region}b
+        PublicSubnet1AZ: !Sub ${Region}b
+        PublicSubnet2AZ: !Sub ${Region}c
         VpcCidrBlock: 10.1.0.0/16
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/vpc/scripts/template/cft-vpc-common-template.yml
       TimeoutInMinutes: '60'
