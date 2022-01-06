@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Aurora Postgress Serverless Glue Connection for data lake as a service - client (DaaS - Client)
+
+# Required Parameter: Environment
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+
+# Resources
+Resources:
+  CreateGluConnPgSrvls:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Description: !Sub Glue Connection for Aurora Postgress Serverless DB in %{Environment}
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        Name: !Sub ${Entity}-glucon-daas-client-pgsrvls
+        SecretManagerName: !Sub '${Entity}-smgr-daas-client-pgsrvls-${Environment}'
+        SecurityGroup: sg-0f3e2e5679277a737
+        SubnetId: 
+          !ImportValue
+              'Fn::Sub': '${Entity}-private-subnet-2'
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/glucon/scripts/template/cft-glucon-common-template.yml
+      TimeoutInMinutes: '60'

@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: EC2 Bastion host for data lake as a service - core (DaaS - Client)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+     Type: String
+     Default: dev
+     AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateDemoSSAEC2:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Description: EC2 Test Demo for SSA      
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        Name: !Sub '${Entity}-ec2-daas-client-bastn-host-${Environment}'
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/ec2/scripts/template/cft-ec2-common-template.yml
+      TimeoutInMinutes: '60'

@@ -16,6 +16,7 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
+        Entity: !Ref Entity      
         Environment: !Sub ${Environment}
         Name: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket
         DenyPolicyAccess: false
