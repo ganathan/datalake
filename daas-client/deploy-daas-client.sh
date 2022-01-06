@@ -50,7 +50,7 @@ then
     # deploy_stack glucon daas-client-pgsrvls 
  
     # deploy_stack lmd glujb-sync-generator 1
-    # deploy_stack s3 daas-client-test-raw-bucket
+    deploy_stack s3 daas-client-test-raw-bucket
     # deploy_stack s3 daas-client-test-cur-bucket
     # deploy_stack s3 daas-client-test-dist-bucket
     # deploy_stack ec2 daas-client-bastn-host 
