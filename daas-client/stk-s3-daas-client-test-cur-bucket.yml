@@ -3,12 +3,18 @@ Description: Test Curation bucket for data lake as a service - client (DaaS - Cl
 
 # Required Parameters: Environment
 Parameters:
+  DaasCoreAccountId:
+    Type: String
+    Default: false
   Entity:
     Type: String
     Default: ganesh
   Environment:
     Type: String
     Default: dev
+  EventQueueArn:
+    Type: String
+    Default: false
 
 # Create Resources
 Resources:
@@ -18,8 +24,8 @@ Resources:
       Parameters:
         Entity: !Ref Entity      
         Environment: !Sub ${Environment}
+        EventQueueArn: !Ref EventQueueArn    
         Name: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket
-        DenyPolicyAccess: false
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/s3/scripts/template/cft-s3-common-template.yml
       TimeoutInMinutes: '60'
 
@@ -27,30 +33,33 @@ Resources:
     Type: 'AWS::S3::BucketPolicy'
     DependsOn: CreateDaaSCurBucket
     Properties:
-        Bucket: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
-        PolicyDocument:
-            Statement:
-                - Sid: Allow DaaS Core Role access
-                  Effect: Allow
-                  Principal:
-                    AWS: "arn:aws:iam::*:role/rle-${Entity}-lmd-curation-invoker-${Environment}"
-                  Action:
-                    - "s3:GetObject"
-                    - "s3:GetBucketPolicy"
-                    - "s3:PutObject"
-                    - "s3:PutBucketPolicy"
-                    - "s3:DeleteObject"
-                  Resource:
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}/*
-                - Sid: Deny insecure access
-                  Effect: Deny
-                  Principal: "*"
-                  Action: "*"
-                  Resource:
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
-                    - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}/*
-                  Condition:
-                    Bool:
-                      "aws:SecureTransport": false
+      Bucket: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
+      PolicyDocument:
+        Statement:
+          - Sid: Allow DaaS Core Role access
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${Entity}-lmd-curate-model-generator-${Environment}
+            Action:
+              - "s3:GetObject"
+              - "s3:GetBucketPolicy"
+              - "s3:PutObject"
+              - "s3:PutBucketPolicy"
+              - "s3:DeleteObject"
+              - "s3:PutObjectAcl"
+              - "s3:ListBucket"
+            Resource:
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}/*
+          - Sid: Deny insecure access
+            Effect: Deny
+            Principal: "*"
+            Action: "*"
+            Resource:
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-cur-bucket-${Environment}/*
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
 

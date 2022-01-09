@@ -1,6 +1,25 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: AWS Common Lambda Cloudformation Template
 
+Mappings:
+  RefLayers:
+    us-west-2:
+      pandas: arn:aws:lambda:us-west-2:770693421928:layer:Klayers-python38-pandas:46
+      scipy: arn:aws:lambda:us-west-2:770693421928:layer:Klayers-python38-scipy:1
+      openpyxl: arn:aws:lambda:us-west-2:770693421928:layer:Klayers-python38-openpyxl:9
+    us-west-1:
+      pandas: arn:aws:lambda:us-west-1:770693421928:layer:Klayers-python38-pandas:46
+      scipy: arn:aws:lambda:us-west-1:770693421928:layer:Klayers-python38-scipy:1
+      openpyxl: arn:aws:lambda:us-west-1:770693421928:layer:Klayers-python38-openpyxl:9
+    us-east-1:
+      pandas: arn:aws:lambda:us-east-1:770693421928:layer:Klayers-python38-pandas:46
+      scipy: arn:aws:lambda:us-east-1:770693421928:layer:Klayers-python38-scipy:1
+      openpyxl: arn:aws:lambda:us-east-1:770693421928:layer:Klayers-python38-openpyxl:9
+    us-east-2:
+      pandas: arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-pandas:46
+      scipy: arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-scipy:1
+      openpyxl: arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-openpyxl:9   
+
 Parameters:
   Application:
     Type: String
@@ -12,6 +31,9 @@ Parameters:
     Type: String
     Default: 55100
   CustomSecurityGroup:
+    Type: String
+    Default: false
+  CrossAccountArn:
     Type: String
     Default: false
   Description:
@@ -105,6 +127,7 @@ Conditions:
   isLambdaSQSEventEnabled: !Not [ !Equals [!Ref SqsEventTriggerArn, false] ]
   isVpcConfigEnabled: !Equals [!Ref EnableVpcConfig, true]
   isSecurityGroupProvided: !Not [ !Equals [!Ref CustomSecurityGroup, false] ]
+  isCrossAccountArnEnabled: !Not [ !Equals [!Ref CrossAccountArn, false] ]
 
 Resources:
   CreateLambda:
@@ -147,15 +170,15 @@ Resources:
             - !Ref "AWS::NoValue"
           - !If
             - isPandasLayerEnabled
-            - arn:aws:lambda:us-west-2:770693421928:layer:Klayers-python38-pandas:43
+            - !FindInMap [RefLayers, !Ref "AWS::Region", pandas ]
             - !Ref "AWS::NoValue"
           - !If
             - isOpenPyXmlLayerEnabled
-            - arn:aws:lambda:us-west-2:770693421928:layer:Klayers-python38-openpyxl:9
+            - !FindInMap [RefLayers, !Ref "AWS::Region", openpyxl ]
             - !Ref "AWS::NoValue"
           - !If
             - isSciPyLayerEnabled
-            - !Sub "arn:aws:lambda:us-west-2:${AWS::AccountId}:layer:AWSLambda-Python38-SciPy1x:29"
+            - !FindInMap [RefLayers, !Ref "AWS::Region", scipy ]
             - !Ref "AWS::NoValue"
           - !If
             - isXmlToDictLayerEnabled
@@ -214,6 +237,10 @@ Resources:
               Service:
                 - lambda.amazonaws.com
                 - events.amazonaws.com
+                - !If
+                  - isCrossAccountArnEnabled
+                  - !Ref CrossAccountArn
+                  - !Ref "AWS::NoValue"
             Action:
               - "sts:AssumeRole"
       Policies:

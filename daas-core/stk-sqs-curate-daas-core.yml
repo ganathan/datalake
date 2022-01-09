@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SQS Curation queue for data lake as a service - core (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateCurateSQSQueue:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Entity: !Ref Entity
+        Environment: !Sub '${Environment}'
+        Name: !Sub '${Entity}-sqs-curate-daas-core-${Environment}'
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sqs/scripts/template/cft-sqs-common-template.yml
+      TimeoutInMinutes: '60'
+
+  CreateCurateSQSQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Properties:
+      Queues:
+        - !GetAtt CreateCurateSQSQueue.Outputs.SQSQueueName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: SQSWriteaccess
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - 'sqs:DeleteMessage'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:SendMessage'
+              - 'sqs:*'
+            Resource:
+              - !GetAtt CreateCurateSQSQueue.Outputs.S3QueueArn
+            Condition:
+              ArnLike:
+                'aws:SourceArn': !Sub 'arn:aws:s3:::${Entity}-s3-${AWS::Region}-*-cur-*-${Environment}'

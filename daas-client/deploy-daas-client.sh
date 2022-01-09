@@ -4,6 +4,7 @@ entity=$1
 accountId=$2
 region=$3
 environment=$4
+daasCoreAccountId=$5
 
 
 deploy_stack(){
@@ -23,7 +24,7 @@ deploy_stack(){
     if [ "$serviceType" != "tag" ]
     then
         # call the child stack
-        sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion
+        sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion $daasCoreAccountId
     fi
 }
 
@@ -47,14 +48,15 @@ then
     # {"username": "xxxx", "password": "xxx", "endpoint": "xxxxxxx", "url":"jdbc:postgresql://xxxxx.xxxx.xxxxx.rds.amazonaws.com:5432/daas","port":"5432"}
     # deploy_stack smgr daas-client-pgsrvls 
     
-    # deploy_stack glucon daas-client-pgsrvls 
- 
+    # deploy_stack glucon daas-client-pgsrvls
     # deploy_stack lmd glujb-sync-generator 1
-    deploy_stack s3 daas-client-test-raw-bucket
-    # deploy_stack s3 daas-client-test-cur-bucket
-    # deploy_stack s3 daas-client-test-dist-bucket
+    # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
+    # deploy_stack s3 daas-client-test-raw-bucket rawQueueArn
+    curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
+    deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId
+    # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
     # deploy_stack ec2 daas-client-bastn-host 
 
 else
-    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment>"
+    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment> <<daas core account id>>"
 fi

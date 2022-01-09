@@ -8,6 +8,8 @@ serviceType=$5
 app=$6
 lambdaVersion=$7
 secretString=$7
+s3QueueArn=$7
+daasCoreAccountId=$8
 stackName=stk-$serviceType-$app
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 type=update
@@ -74,9 +76,11 @@ then
     # Copy the s3 bucket to the common deploy folder
     aws s3 cp $stackName.yml \
        s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml
+       
 
     # Check if stack already exists
-    stackStatus=$(aws cloudformation describe-stacks --stack-name "${stackName}-${environment}" 2>&1)
+    # stackStatus=$(aws cloudformation describe-stacks --stack-name "${stackName}-${environment}" 2>&1)
+    stackStatus=$(aws cloudformation describe-stacks --stack-name "${stackName}-${environment}" --region "${region}" 2>&1)
     if echo "${stackStatus}" | grep 'does not exist'; then
         echo "switching to create stack"
         type=create
@@ -92,6 +96,28 @@ then
             --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
                         ParameterKey=LambdaZipFileName,ParameterValue=$stackName/$serviceType-$app-$lambdaVersion.zip \
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+    elif [ "$serviceType" == "s3" ]
+    then
+        if [ ! -z "$s3QueueArn" ]
+        then
+            echo $s3QueueArn
+            # s3 bucket with event queue arn. 
+            aws cloudformation $type-stack \
+                --stack-name $stackName-$environment \
+                --region $region \
+                --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+                --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
+                        ParameterKey=EventQueueArn,ParameterValue=$s3QueueArn ParameterKey=DaasCoreAccountId,ParameterValue=$daasCoreAccountId \
+                --capabilities CAPABILITY_AUTO_EXPAND
+        else
+            # s3 bucket with no event queue arn.
+            aws cloudformation $type-stack \
+                --stack-name $stackName-$environment \
+                --region $region \
+                --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+                --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
+                --capabilities CAPABILITY_AUTO_EXPAND
+        fi
     elif [ "$serviceType" == "stpfn" ]
     then
         # create or update the cloudformation stack

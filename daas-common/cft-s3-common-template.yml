@@ -75,6 +75,9 @@ Resources:
             - Event: 's3:ObjectCreated:*'
               Queue: !Ref EventQueueArn
         - !Ref 'AWS::NoValue'
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: !Ref DenyPolicyAccess
