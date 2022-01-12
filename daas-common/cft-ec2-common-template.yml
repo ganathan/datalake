@@ -34,6 +34,9 @@ Parameters:
   Project:
     Type: String
     Default: daas
+  Region:
+    Type: String
+    Default: us-west-2
   Support:
     Type: String
     Default: nathan.ganesh@gmail.com
@@ -44,7 +47,9 @@ Parameters:
 Mappings:
   RegionMap:
     us-west-2:
-     "AMI": "ami-0518bb0e75d3619ca"
+      "AMI": "ami-0518bb0e75d3619ca"
+    us-west-1:
+      "AMI": "ami-02d03ce209db75523"
 
 Resources:
   CreateEC2Instance:
@@ -53,9 +58,9 @@ Resources:
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      SubnetId:
-        - !ImportValue
-            'Fn::Sub': '${Entity}-public-subnet-1'      
+      SubnetId: 
+        !ImportValue 
+          'Fn::Sub': '${Entity}-public-subnet-1'      
       SecurityGroupIds: 
         - Fn::ImportValue:
             !Sub ${Entity}-sgrp-ec2-default-${Environment}

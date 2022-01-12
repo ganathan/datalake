@@ -9,11 +9,11 @@ app=$6
 lambdaVersion=$7
 secretString=$7
 s3QueueArn=$7
+ec2KeyPairName=$7
 daasCoreAccountId=$8
 stackName=stk-$serviceType-$app
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 type=update
-
 
 # Check if parameters are defined
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ]  && [ ! -z "$serviceType" ] && [ ! -z "$app" ] 
@@ -100,8 +100,6 @@ then
     then
         if [ ! -z "$s3QueueArn" ]
         then
-            echo $s3QueueArn
-            echo $daasCoreAccountId
             # s3 bucket with event queue arn. 
             aws cloudformation $type-stack \
                 --stack-name $stackName-$environment \
@@ -119,6 +117,36 @@ then
                 --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
                 --capabilities CAPABILITY_AUTO_EXPAND
         fi
+    elif [ "$serviceType" == "ec2" ]
+    then
+        echo 'inside ec2 logic...'
+        # check if key pair exists, else create one.
+        echo $ec2KeyPairName
+        keyPairStatus=$(aws ec2 wait key-pair-exists --region "${region}" --key-names "${ec2KeyPairName}" 2>&1)
+        echo $keyPairStatus
+        tst="{$keyPairStatus}.is there value"
+        echo $tst
+        if [ ! -z "$keyPairStatus" ]
+        then
+            aws ec2 create-key-pair --key-name $ec2KeyPairName --query "KeyMaterial" --region $region --output text > $ec2KeyPairName.pem
+            
+            # Copy the pem file to the common stack folder only when it exists
+            file=$ec2KeyPairName.pem
+            if [[ -f "$file" ]]; then
+                aws s3 cp $file  \
+                    s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$ec2KeyPairName.pem
+            fi
+
+        fi
+
+        # create or update the cloudformation stack
+        aws cloudformation $type-stack \
+            --stack-name $stackName-$environment \
+            --region $region \
+            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
+                        ParameterKey=KeyName,ParameterValue=$ec2KeyPairName ParameterKey=Region,ParameterValue=$region \
+            --capabilities CAPABILITY_AUTO_EXPAND  
     elif [ "$serviceType" == "stpfn" ]
     then
         # create or update the cloudformation stack

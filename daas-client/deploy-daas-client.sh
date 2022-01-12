@@ -5,6 +5,7 @@ accountId=$2
 region=$3
 environment=$4
 daasCoreAccountId=$5
+ec2KeyPairName=$6
 
 
 deploy_stack(){
@@ -50,13 +51,13 @@ then
     
     # deploy_stack glucon daas-client-pgsrvls
     # deploy_stack lmd glujb-sync-generator 1
-    rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-ingest-daas-core-$environment
-    deploy_stack s3 daas-client-test-raw-bucket $rawQueueArn $daasCoreAccountId
+    # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-ingest-daas-core-$environment
+    # deploy_stack s3 daas-client-test-raw-bucket $rawQueueArn $daasCoreAccountId
     # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
     # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId
     # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
-    # deploy_stack ec2 daas-client-bastn-host 
+     deploy_stack ec2 daas-client-bastn-host 
 
 else
-    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment> <<daas core account id>>"
+    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment> <<daas core account id>> <<ec2 key pair name>>"
 fi

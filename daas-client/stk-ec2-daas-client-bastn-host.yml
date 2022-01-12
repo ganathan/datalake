@@ -6,9 +6,13 @@ Parameters:
     Type: String
     Default: ganesh
   Environment:
-     Type: String
-     Default: dev
-     AllowedValues: [dev, tst, int, uat, prd, poc]
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  KeyName:
+    Type: String
+  Region:
+    Type: String
 
 Resources:
   CreateDemoSSAEC2:
@@ -18,6 +22,8 @@ Resources:
         Description: EC2 Test Demo for SSA      
         Entity: !Ref Entity
         Environment: !Ref Environment
+        KeyName: !Ref KeyName
         Name: !Sub '${Entity}-ec2-daas-client-bastn-host-${Environment}'
+        Region: !Ref Region
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/ec2/scripts/template/cft-ec2-common-template.yml
       TimeoutInMinutes: '60'
