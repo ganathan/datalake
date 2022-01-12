@@ -1,11 +1,6 @@
-# --------------------------------------------------------------------------
-# Author:       Ganesh Nathan
-# Date:         05/08/2020
-# Description:  DaaS common lambda to create distribution glue crawler, catalog and table
-# --------------------------------------------------------------------------
-import copy
 import json
 import boto3
+import os
 
 
 
@@ -13,11 +8,12 @@ import boto3
 # Initializes global variables
 # --------------------------------------------------
 def init():
-    print('inside init')
-    global lambda_client, event_client, glue_client
+    global lambda_client, event_client, glue_client, entity, environment
     glue_client = boto3.client('glue')
     lambda_client = boto3.client('lambda')
     event_client = boto3.client('events')
+    entity = os.environ["ENV_VAR_ENTITY"]
+    environment = os.environ['ENV_VAR_ENVIRONMENT']
 
 
 # -------------------------------------------------
@@ -63,13 +59,7 @@ def add_table_partitions(glue_db_name, table_name, partitions, partition_values)
         # Extract the existing storage descriptor and Create custom storage descriptor with new partition location
         storage_descriptor = get_table_response['Table']['StorageDescriptor']
         custom_storage_descriptor = copy.deepcopy(storage_descriptor)
-        custom_storage_descriptor['Location'] = storage_descriptor['Location'] + partitions + '/'
-
-        print('inside add table partition ' + table_name)
-        print(custom_storage_descriptor)
-        print(partitions)
-        print(partition_values)
-        print(glue_db_name)
+        custom_storage_descriptor['Location'] = storage_descriptor['Location'] + partitions[0] + '/'
 
          # Create partitions in the glue table
         response = glue_client.create_partition(
@@ -80,7 +70,6 @@ def add_table_partitions(glue_db_name, table_name, partitions, partition_values)
                 'StorageDescriptor': custom_storage_descriptor
             }
         )
-        print(response)
     else:
         print("partition exists...ignoring changes!")
 
@@ -113,7 +102,7 @@ def create_crawler(glue_db_name, lakeformation_role_name, crawler_name, domain_n
         )
         return response
     except Exception as e:
-        print(e)
+        return e
 
 # -------------------------------------------------
 # Create the new glue crawler
@@ -156,6 +145,15 @@ def create_cloudwatch_event(crawler_name, target_lambda_arn):
     )
 
 # -------------------------------------------------
+# Create the cloudwatch event for the crawler
+# -------------------------------------------------
+def invoke_gluejob(glue_job_name):
+    client = boto3.client('glue')
+    response = client.start_job_run(JobName = glue_job_name)
+    return response
+
+
+# -------------------------------------------------
 # Main lambda function
 # -------------------------------------------------
 def lambda_handler(event, context):
@@ -172,13 +170,16 @@ def lambda_handler(event, context):
         table_name = event['table_name']
         partitions = event['partitions']
         partition_values=event['partition_values']
+        replicate = event['replicate']
+        db_name = event['db_name']
+        db_schema = event['db_schema']
         if crawler_exits(crawler_name):
-            print('1a')
             add_table_partitions(glue_db_name, table_name, partitions, partition_values)
+            if replicate:
+                glue_job_name = entity + '_glujb_' + table_name + '_' + environment
+                invoke_gluejob(glue_job_name)
         else:
-            print('1b')
             create_crawler(glue_db_name, lakeformation_role_name, crawler_name, domain_name, source_file_path)
-            print('1c')
             start_crawler(crawler_name)
             # create_cloudwatch_event(crawler_name, target_lambda_arn)
         return {

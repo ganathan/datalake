@@ -40,7 +40,7 @@ then
     # deploy_stack sgrp ec2-default
     # deploy_stack sgrp rds-pgrs-default
     # deploy_stack sgrp lmd-default
-    # deploy_stack lmd metadata-generator 1
+    # deploy_stack lmd metadata-generator 2
 
     # Create aurora serverless database manually, take note of username and password
 
@@ -50,10 +50,10 @@ then
     
     # deploy_stack glucon daas-client-pgsrvls
     # deploy_stack lmd glujb-sync-generator 1
-    # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
-    # deploy_stack s3 daas-client-test-raw-bucket rawQueueArn
-    curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
-    deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId
+    rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-ingest-daas-core-$environment
+    deploy_stack s3 daas-client-test-raw-bucket $rawQueueArn $daasCoreAccountId
+    # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
+    # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId
     # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
     # deploy_stack ec2 daas-client-bastn-host 
 

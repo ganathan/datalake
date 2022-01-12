@@ -17,7 +17,7 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties :
       Parameters:
-        CrossAccountArn: arn:aws:iam:495430879539:role/rle-${Entity}-lmd-ingest-invoker-${Environment}
+        CrossAccountArn: !Sub arn:aws:iam:495430879539:role/rle-${Entity}-lmd-ingest-invoker-${Environment}
         Entity: !Ref Entity      
         Environment: !Ref Environment
         Name: !Sub ${Entity}-lmd-metadata-generator-${Environment}

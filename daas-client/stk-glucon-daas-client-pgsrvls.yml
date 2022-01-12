@@ -27,6 +27,6 @@ Resources:
             'Fn::Sub': '${Entity}-sgrp-rds-pgrs-default-${Environment}'
         SubnetId:
           !ImportValue
-              'Fn::Sub': '${Entity}-private-subnet-2'
+              'Fn::Sub': '${Entity}-private-subnet-1'
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/glucon/scripts/template/cft-glucon-common-template.yml
       TimeoutInMinutes: '60'

@@ -237,10 +237,6 @@ Resources:
               Service:
                 - lambda.amazonaws.com
                 - events.amazonaws.com
-                - !If
-                  - isCrossAccountArnEnabled
-                  - !Ref CrossAccountArn
-                  - !Ref "AWS::NoValue"
             Action:
               - "sts:AssumeRole"
       Policies:

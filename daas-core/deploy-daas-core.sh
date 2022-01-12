@@ -39,12 +39,12 @@ then
     # deploy_stack sqs ingest-daas-core 
     # deploy_stack sgrp lmd-default
     # deploy_stack lmdlyr xmltodict
-    # deploy_stack lmd ingest-invoker 1
+    deploy_stack lmd ingest-invoker 2
     # deploy_stack lmd excel-processor 1
     # deploy_stack lmd xml-processor 1
     # deploy_stack stpfn event-converter
     # deploy_stack sqs curate-daas-core 
-    deploy_stack lmd curate-model-generator 1
+    # deploy_stack lmd curate-model-generator 1
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment>"
 fi

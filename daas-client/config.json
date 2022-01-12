@@ -2,5 +2,10 @@
   "account_id":"XXXXXXX",
   "region":"XXXXX",
   "entity":"xxxxx",
-  "replicate":"false"
+  "replicate": true,
+  "repl_db_info":{
+  	"type":"postgres",
+  	"db_name":"daas",
+  	"db_schema:":"daas_raw"
+  }
 }

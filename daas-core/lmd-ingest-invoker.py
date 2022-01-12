@@ -124,10 +124,22 @@ def get_client_entity_name(data_dict):
     entity_name = json.loads(data_dict)['entity']
     return entity_name
 
+# -------------------------------------------------------------------------------------------
+# Read the replication status, database name and database schema  from the daas-config file
+# -------------------------------------------------------------------------------------------
+def get_replication_detail(data_dict):
+    replicate = json.loads(data_dict)['replicate']
+    db_name=""
+    db_schema=""
+    if replicate:
+        db_name = json.loads(data_dict)['repl_db_info']['db_name']
+        db_schema = json.loads(data_dict)['repl_db_info']['db_schema']
+    return replicate, db_name, db_schema 
+
 # ----------------------------------------------------------
 # Invoke metadata generator lambda on the client account
 # ----------------------------------------------------------
-def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values):
+def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values, replicate, db_name, db_schema):
     sts_connection = boto3.client('sts')
     daas_client = sts_connection.assume_role(
         RoleArn=target_lambda_role_arn,
@@ -148,6 +160,9 @@ def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path,
     data['table_name'] = table_name
     data['partitions'] = value
     data['partition_values'] = partition_values
+    data['replicate'] = replicate
+    data['db_name'] = db_name
+    data['db_schema'] = db_schema
     json_str=json.dumps(data)
     response = lambda_client.invoke(
         FunctionName= target_lambda_arn, 
@@ -211,11 +226,12 @@ def lambda_handler(event, context):
                         account_id = get_client_accountid(data_dict)
                         region = get_client_region(data_dict)
                         entity = get_client_entity_name(data_dict)
+                        (replicate, db_name, db_schema) = get_replication_detail(data_dict)
                         target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
                         target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
                         crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
                         table_name = domain_name.replace('-','_')
-                        result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values)
+                        result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values, replicate, db_name, db_schema)
                         # create_cloudwatch_event(crawler_name)
                         print(result)
                 else:

@@ -4,12 +4,14 @@ import os
 from io import StringIO
 
 def init():
-    global s3, s3_client, glue_client, trg_connection_name, trg_glue_srvc_role
+    global s3, s3_client, glue_client, trg_connection_name, trg_glue_srvc_role, entity, environment
     s3 = boto3.resource('s3')
     s3_client=boto3.client('s3')
     glue_client=boto3.client('glue')
     trg_connection_name=glue_db_name = os.environ["ENV_VAR_GLUE_CONNECTION"]
     trg_glue_srvc_role = os.environ["ENV_VAR_GLUE_SERVICE_ROLE"]
+    entity = os.environ["ENV_VAR_ENTITY"]
+    environment = os.environ['ENV_VAR_ENVIRONMENT']
 
 def get_source_table(src_database_name, src_table_name):
     src_table = glue_client.get_table(DatabaseName=src_database_name, Name=src_table_name)['Table']
@@ -80,13 +82,14 @@ def get_drop_null():
     return drop_null
 
 
-def get_write_frame(trg_table_name, trg_database_name):
+def get_write_frame(trg_table_name, trg_database_name, trg_database_schema_name):
+    trg_table = trg_database_schema_name + '.' + trg_table_name
     write_frame= ( 
         '## @type: DataSink\n'
-        '## @args: [catalog_connection = "'+ trg_connection_name +'", connection_options = {"dbtable": "'+ trg_table_name +'", "database": "'+ trg_database_name +'"}, transformation_ctx = "datasink4"]\n'
+        '## @args: [catalog_connection = "'+ trg_connection_name +'", connection_options = {"dbtable": "'+ trg_table +'", "database": "'+ trg_database_name +'"}, transformation_ctx = "datasink4"]\n'
         '## @return: datasink4\n'
         '## @inputs: [frame = dropnullfields3]\n'
-        'datasink4 = glueContext.write_dynamic_frame.from_jdbc_conf(frame = dropnullfields3, catalog_connection = "'+ trg_connection_name +'", connection_options = {"dbtable": "'+ trg_table_name +'", "database": "'+ trg_database_name +'"}, transformation_ctx = "datasink4")\n'
+        'datasink4 = glueContext.write_dynamic_frame.from_jdbc_conf(frame = dropnullfields3, catalog_connection = "'+ trg_connection_name +'", connection_options = {"dbtable": "'+ trg_table +'", "database": "'+ trg_database_name +'"}, transformation_ctx = "datasink4")\n'
         'job.commit()')
     return write_frame
 
@@ -133,7 +136,8 @@ def lambda_handler(event, context):
         src_database_name=json.dumps(event['src_database_name']).strip('"')  
         trg_table_name=json.dumps(event['trg_table_name']).strip('"')
         trg_database_name=json.dumps(event['trg_database_name']).strip('"')
-        glue_job_name = 'daas_glue_' + src_table_name + '_job'
+        trg_database_schema_name=json.dumps(event['trg_database_schema_name']).strip('"')
+        glue_job_name = entity + '_glujb_' + src_table_name + '_' + environment
         glue_job_dir = src_source_name + '/.daas-config/glue-jobs'
         glue_job_key= glue_job_dir + '/scripts/' + glue_job_name + '.py'
         script_location = 's3://' + src_bucket_name + '/' + glue_job_key
@@ -158,7 +162,7 @@ def lambda_handler(event, context):
             script_buffer.write(get_apply_map(src_columns, src_partitions))
             script_buffer.write(get_resolve_choice())
             script_buffer.write(get_drop_null())
-            script_buffer.write(get_write_frame(trg_table_name, trg_database_name))
+            script_buffer.write(get_write_frame(trg_table_name, trg_database_name, trg_database_schema_name))
             s3_client.put_object(Body=script_buffer.getvalue(), Bucket=src_bucket_name, Key=glue_job_key)
             create_glue_job(glue_job_name, script_location, script_temp_location)
         print('6')

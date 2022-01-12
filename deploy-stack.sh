@@ -101,6 +101,7 @@ then
         if [ ! -z "$s3QueueArn" ]
         then
             echo $s3QueueArn
+            echo $daasCoreAccountId
             # s3 bucket with event queue arn. 
             aws cloudformation $type-stack \
                 --stack-name $stackName-$environment \
