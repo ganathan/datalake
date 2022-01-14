@@ -41,7 +41,7 @@ then
     # deploy_stack sgrp ec2-default
     # deploy_stack sgrp rds-pgrs-default
     # deploy_stack sgrp lmd-default
-    # deploy_stack lmd metadata-generator 2
+    deploy_stack lmd metadata-generator 2
 
     # Create aurora serverless database manually, take note of username and password
 
@@ -56,7 +56,7 @@ then
     # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
     # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId
     # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
-     deploy_stack ec2 daas-client-bastn-host 
+    # deploy_stack ec2 daas-client-bastn-host 
 
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment> <<daas core account id>> <<ec2 key pair name>>"

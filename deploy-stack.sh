@@ -11,6 +11,7 @@ secretString=$7
 s3QueueArn=$7
 ec2KeyPairName=$7
 daasCoreAccountId=$8
+daasCoreEntity=$9
 stackName=stk-$serviceType-$app
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 type=update
@@ -107,6 +108,7 @@ then
                 --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
                 --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
                         ParameterKey=EventQueueArn,ParameterValue=$s3QueueArn ParameterKey=DaasCoreAccountId,ParameterValue=$daasCoreAccountId \
+                        ParameterKey=DaasCoreEntity,ParameterValue=$daasCoreEntity \
                 --capabilities CAPABILITY_AUTO_EXPAND
         else
             # s3 bucket with no event queue arn.

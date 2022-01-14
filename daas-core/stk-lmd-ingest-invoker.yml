@@ -20,9 +20,6 @@ Resources:
         Description: !Sub Lambda Invoker for Datalake as a Service deployed in ${Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
-        EnableOpenPyXmlLayer: true
-        EnablePandasLayer: true
-        EnableXmlToDictLayer: true
         HandlerName: lmd-ingest-invoker.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         LambdaEnvVarFileName: !Sub stacks/stk-lmd-ingest-invoker/stk-lmd-ingest-invoker-env-var.yml
@@ -31,7 +28,7 @@ Resources:
         SqsEventTriggerArn: 
           Fn::ImportValue:
             !Sub "${Entity}-sqs-ingest-daas-core-${Environment}-arn"
-        Timeout: 120
+        Timeout: 60
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 

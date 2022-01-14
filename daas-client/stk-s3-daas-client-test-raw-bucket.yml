@@ -5,6 +5,9 @@ Parameters:
   DaasCoreAccountId:
     Type: String
     Default: false
+  DaasCoreEntity:
+    Type: String
+    Default: false
   Entity:
     Type: String
     Default: ganesh
@@ -42,9 +45,9 @@ Resources:
             Effect: Allow
             Principal: 
               AWS:
-                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${Entity}-lmd-ingest-invoker-${Environment}
-                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${Entity}-lmd-excel-processor-${Environment}
-                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${Entity}-lmd-xml-processor-${Environment}
+                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-ingest-invoker-${Environment}
+                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-excel-processor-${Environment}
+                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-xml-processor-${Environment}
             Action:
               - "s3:GetObject"
               - "s3:GetBucketPolicy"

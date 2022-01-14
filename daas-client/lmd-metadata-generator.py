@@ -1,7 +1,7 @@
 import json
 import boto3
 import os
-
+import copy
 
 
 # --------------------------------------------------
@@ -14,6 +14,8 @@ def init():
     event_client = boto3.client('events')
     entity = os.environ["ENV_VAR_ENTITY"]
     environment = os.environ['ENV_VAR_ENVIRONMENT']
+    account_id = os.environ['ENV_VAR_ACCOUNT_ID']
+    region = os.environ['ENV_VAR_REGION']
 
 
 # -------------------------------------------------
@@ -105,7 +107,7 @@ def create_crawler(glue_db_name, lakeformation_role_name, crawler_name, domain_n
         return e
 
 # -------------------------------------------------
-# Create the new glue crawler
+# Start the new glue crawler
 # -------------------------------------------------
 def start_crawler(crawler_name):
     response = glue_client.start_crawler(
@@ -116,10 +118,19 @@ def start_crawler(crawler_name):
 # -------------------------------------------------
 # Create the cloudwatch event for the crawler
 # -------------------------------------------------
-def create_cloudwatch_event(crawler_name, target_lambda_arn):
-    rule_name = crawler_name + "-event"
+def create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, db_name, db_schema, crawler_name):
+    rule_name = entity + '-evt-' + crawler_name
     event_json_string = json.dumps({'source': ['aws.glue'], 'detail-type': ['Glue Crawler State Change'],
                                     'detail': {'crawlerName': [crawler_name], 'state': ['Succeeded']}})
+
+    input_json = {
+        "src_bucket_name": src_bucket_name, 
+        "src_source_name": src_source_name,
+        "src_dataset_name": domain_name,
+        "src_database_name": glue_db_name,
+        "trg_table_name": domain_name,
+        "trg_database_name": db_name,
+        "trg_database_schema_name": db_schema }
 
     # Create the rule first
     rule_response = event_client.put_rule(
@@ -132,12 +143,12 @@ def create_cloudwatch_event(crawler_name, target_lambda_arn):
     # Place the lambda target for the rule
     response = event_client.put_targets(
         Rule=rule_name,
-        Targets=[{'Id': rule_name, 'Arn': target_lambda_arn}, ]
+        Targets=[{'Id': rule_name, 'Arn': gluejb_lambda_arn, 'Input': json.dumps(input_json)}]
     )
 
     # Grant invoke permission to Lambda
     lambda_client.add_permission(
-        FunctionName=target_lambda_name,
+        FunctionName=gluejb_lambda_arn,
         StatementId=rule_name,
         Action='lambda:InvokeFunction',
         Principal='events.amazonaws.com',
@@ -162,8 +173,9 @@ def lambda_handler(event, context):
     try:
         glue_db_name = event['glue_db_name']
         lakeformation_role_name = event['lakeformation_role_name']
-        target_lambda_name = event['target_lambda_name']
-        target_lambda_arn = event['target_lambda_arn']
+        gluejb_lambda_arn = event['gluejb_lambda_arn']
+        src_bucket_name = event['src_bucket_name']
+        src_source_name = event['src_source_name']
         crawler_name = event['crawler_name']
         source_file_path = event['source_file_path']
         domain_name = event['domain_name']
@@ -181,7 +193,7 @@ def lambda_handler(event, context):
         else:
             create_crawler(glue_db_name, lakeformation_role_name, crawler_name, domain_name, source_file_path)
             start_crawler(crawler_name)
-            # create_cloudwatch_event(crawler_name, target_lambda_arn)
+            create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, db_name, db_schema, crawler_name)
         return {
             'body': json.dumps('SUCCESS'),
             'statusCode': 200

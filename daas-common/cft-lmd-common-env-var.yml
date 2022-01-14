@@ -1,5 +1,11 @@
 Environment:
   Variables:
+    ENV_VAR_ACCOUNT_ID:
+      Fn::Sub: ${AWS::AccountId}   
+    ENV_VAR_ENTITY:
+      Fn::Sub: ${Entity}
+    ENV_VAR_REGION:
+      Fn::Sub: ${AWS::Region}
     ENV_VAR_ENVIRONMENT:
       Fn::Sub: ${Environment}
     ENV_VAR_LOGGING_LEVEL: info

@@ -25,9 +25,9 @@ Resources:
         EnableXmlToDictLayer: true
         HandlerName: lmd-excel-processor.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
-        MemorySize: 256 
+        MemorySize: 256
         Name: !Sub ${Entity}-lmd-excel-processor-${Environment}
-        Timeout: 120
+        Timeout: 180
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 

@@ -4,9 +4,6 @@ import os
 import urllib.parse
 import boto3
 import hashlib
-import xmltodict
-import openpyxl
-import pandas as pd
 from io import StringIO
 
 
@@ -15,7 +12,7 @@ from io import StringIO
 # --------------------------------------------------
 def init():
     global s3, s3_client, stpfn_client, lambda_client, event_client, glue_client, glue_db_name 
-    global lakeformation_role_name, target_lambda_name, daas_config, accountid
+    global lakeformation_role_name, target_lambda_name, daas_config, accountid, environment
     global region, event_converter_stepfn_arn
     stpfn_client = boto3.client('stepfunctions')
     s3_client = boto3.client('s3')
@@ -24,83 +21,13 @@ def init():
     lambda_client = boto3.client('lambda')
     event_client = boto3.client('events')
     accountid = os.environ["ENV_VAR_ACCOUNT_ID"]
+    environment = os.environ["ENV_VAR_ENVIRONMENT"]
     region = os.environ["ENV_VAR_REGION_NAME"]
     daas_config = os.environ["ENV_VAR_DAAS_CONFIG_FILE"]
     glue_db_name = os.environ["ENV_VAR_DAAS_CORE_GLUE_DB"]
     lakeformation_role_name = os.environ["ENV_VAR_GLUE_SERVICE_ROLE"]
     target_lambda_name = os.environ["ENV_VAR_CLIENT_LAMBDA_NAME"]
     event_converter_stepfn_arn = os.environ["ENV_VAR_EVNT_CONVR_STEP_FUNC_ARN"]
-
- 
-# -------------------------------------------------
-# Create the cloudwatch event for the crawler
-# -------------------------------------------------
-def create_cloudwatch_event(crawler_name):
-    rule_name = crawler_name + "-event"
-    event_json_string = json.dumps({'source': ['aws.glue'], 'detail-type': ['Glue Crawler State Change'],
-                                    'detail': {'crawlerName': [crawler_name], 'state': ['Succeeded']}})
- 
-    # Create the rule first
-    rule_response = event_client.put_rule(
-        Name=rule_name,
-        EventPattern=event_json_string,
-        State='ENABLED',
-        Description='Cloud Watch event rule for crawler ' + crawler_name
-    )
- 
-    # Place the lambda target for the rule
-    response = event_client.put_targets(
-        Rule=rule_name,
-        Targets=[{'Id': rule_name, 'Arn': target_lambda_arn}, ]
-    )
- 
-    # Grant invoke permission to Lambda
-    lambda_client.add_permission(
-        FunctionName=target_lambda_name,
-        StatementId=rule_name,
-        Action='lambda:InvokeFunction',
-        Principal='events.amazonaws.com',
-        SourceArn=rule_response['RuleArn'],
-    )
- 
-# -------------------------------------------------
-# Convert excel file to csv
-# -------------------------------------------------
-def convert_excel_to_csv(source_bucket, source_key, short_path, domain_name, object_name):
-    excel_file = s3_client.get_object(Bucket=source_bucket, Key=source_key)
-    df_sheet  = pd.read_excel(excel_file['Body'].read(), index_col=0, engine='openpyxl')
-    csv_key = source_key.split('.')[0] + '.csv'
-    csv_buffer = StringIO()
-    df_sheet.to_csv(csv_buffer, sep="|")
-    s3_client.put_object(Body=csv_buffer.getvalue(), Bucket=source_bucket, Key=csv_key)
-    
-    # move the original xml file to raw folder
-    domain_end_index = short_path.find(domain_name) + len(domain_name)
-    new_source_key = short_path[0:domain_end_index] + '-daas-gen-raw' + short_path[domain_end_index:len(short_path)] + '/' + object_name
-    copy_source = { 'Bucket': source_bucket, 'Key': source_key }
-    result = s3.meta.client.copy(copy_source,source_bucket,new_source_key)
-    s3_client.delete_object(
-        Bucket=source_bucket, 
-        Key=source_key
-    )
-
-
-# -------------------------------------------------
-# Convert xml file to json
-# -------------------------------------------------
-def convert_xml_to_json(source_bucket, source_key, short_path, domain_name, object_name):
-    xml_file = s3_client.get_object(Bucket=source_bucket, Key=source_key)
-    data_dict = xmltodict.parse(xml_file['Body'].read())
-    json_data = json.dumps(data_dict).replace('@','').replace('#text','text').replace('xmlns:','xmlns_').replace('xsi:','xsi_').replace('sdtc:','sdtc_')
-    json_key = source_key.split('.')[0] + '.json'
-    s3_client.put_object(Body=json_data, Bucket=source_bucket, Key=json_key)
-    
-    # move the original xml file to raw folder
-    domain_end_index = short_path.find(domain_name) + len(domain_name)
-    new_source_key = short_path[0:domain_end_index] + '-daas-gen-raw' + short_path[domain_end_index:len(short_path)] + '/' + object_name
-    copy_source = { 'Bucket': source_bucket, 'Key': source_key }
-    result = s3.meta.client.copy(copy_source,source_bucket,new_source_key)
-    s3_client.delete_object(Bucket=source_bucket, Key=source_key)
 
 
 # ----------------------------------------------------------
@@ -139,7 +66,8 @@ def get_replication_detail(data_dict):
 # ----------------------------------------------------------
 # Invoke metadata generator lambda on the client account
 # ----------------------------------------------------------
-def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, value, partition_values, replicate, db_name, db_schema):
+def invoke_lambda(target_lambda_arn, target_gluejb_lambda_arn, source_bucket, source_name, target_lambda_role_arn, crawler_name, 
+                path, domain_name, table_name, value, partition_values, replicate, db_name, db_schema):
     sts_connection = boto3.client('sts')
     daas_client = sts_connection.assume_role(
         RoleArn=target_lambda_role_arn,
@@ -152,8 +80,9 @@ def invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path,
     data={}
     data['glue_db_name'] = glue_db_name
     data['lakeformation_role_name'] = lakeformation_role_name
-    data['target_lambda_name'] = target_lambda_name
-    data['target_lambda_arn'] = target_lambda_arn
+    data['gluejb_lambda_arn'] = target_gluejb_lambda_arn
+    data['src_bucket_name'] = source_bucket
+    data['src_source_name'] = source_name
     data['source_file_path'] = path
     data['domain_name'] = domain_name
     data['crawler_name'] = crawler_name
@@ -230,8 +159,10 @@ def lambda_handler(event, context):
                         target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
                         target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
                         crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
+                        target_gluejb_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + entity + '-lmd-glujb-sync-generator-' + environment
                         table_name = domain_name.replace('-','_')
-                        result = invoke_lambda(target_lambda_arn, target_lambda_role_arn, crawler_name, path, domain_name, table_name, partitions, partition_values, replicate, db_name, db_schema)
+                        result = invoke_lambda(target_lambda_arn, target_gluejb_lambda_arn, source_bucket, source_name, target_lambda_role_arn, crawler_name, path, 
+                                     domain_name, table_name, partitions, partition_values, replicate, db_name, db_schema)
                         # create_cloudwatch_event(crawler_name)
                         print(result)
                 else:

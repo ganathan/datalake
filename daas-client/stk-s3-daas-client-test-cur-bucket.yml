@@ -6,6 +6,9 @@ Parameters:
   DaasCoreAccountId:
     Type: String
     Default: false
+  DaasCoreEntity:
+    Type: String
+    Default: false
   Entity:
     Type: String
     Default: ganesh
@@ -40,7 +43,7 @@ Resources:
             Effect: Allow
             Principal:
               AWS: 
-                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${Entity}-lmd-curate-model-generator-${Environment}
+                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-curate-model-generator-${Environment}
             Action:
               - "s3:GetObject"
               - "s3:GetBucketPolicy"

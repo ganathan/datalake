@@ -24,8 +24,8 @@ Resources:
         Description: !Sub Datalake as a Service Client metadata generator deployed in ${Environment}
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         HandlerName: lmd-metadata-generator.lambda_handler
-        MemorySize: 128
-        Timeout: 120
+        MemorySize: 256
+        Timeout: 60
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 
@@ -112,13 +112,21 @@ Resources:
               - "iam:UpdateRole"
               - "iam:UpdateRoleDescription"
             Resource:
-              Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
+              Fn:Sub:  "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
           -
             Sid: "allowGetLogEvents"
             Effect: "Allow"
             Action: "logs:GetLogEvents"
             Resource:
               -  "arn:aws:logs:*:*:*:/aws-glue/*"
+          -
+            Sid: "allowEventAccess"
+            Effect: "Allow"
+            Action: 
+              - "events:PutRule"
+              - "events:PutTargets"
+            Resource:
+              Fn::Sub: "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/${Entity}-evt-*"  
           -
             Sid: "passRoleGlueServiceRole"
             Effect: "Allow"
@@ -161,4 +169,5 @@ Resources:
               - "iam:GetRolePolicy"
               - "s3:GetBucketLocation"
               - "rds:DescribeDBClusters"
+              -  "lambda:AddPermission"
             Resource: "*"
