@@ -112,7 +112,7 @@ Resources:
               - "iam:UpdateRole"
               - "iam:UpdateRoleDescription"
             Resource:
-              Fn:Sub:  "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
+              Fn::Sub:  "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
           -
             Sid: "allowGetLogEvents"
             Effect: "Allow"
@@ -126,7 +126,13 @@ Resources:
               - "events:PutRule"
               - "events:PutTargets"
             Resource:
-              Fn::Sub: "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/${Entity}-evt-*"  
+              Fn::Sub: "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/${Entity}-evt-*"
+          -
+            Sid: "allowGluJbLambdaInvokeAccess"
+            Effect: "Allow"
+            Action: "lambda:InvokeFunction"
+            Resource:
+              Fn::Sub: "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-lmd-glujb-sync-generator-${Environment}"
           -
             Sid: "passRoleGlueServiceRole"
             Effect: "Allow"
@@ -169,5 +175,5 @@ Resources:
               - "iam:GetRolePolicy"
               - "s3:GetBucketLocation"
               - "rds:DescribeDBClusters"
-              -  "lambda:AddPermission"
+              - "lambda:AddPermission"
             Resource: "*"

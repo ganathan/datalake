@@ -118,7 +118,7 @@ def start_crawler(crawler_name):
 # -------------------------------------------------
 # Create the cloudwatch event for the crawler
 # -------------------------------------------------
-def create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, db_name, db_schema, crawler_name):
+def create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, table_name, db_name, db_schema, crawler_name):
     rule_name = entity + '-evt-' + crawler_name
     event_json_string = json.dumps({'source': ['aws.glue'], 'detail-type': ['Glue Crawler State Change'],
                                     'detail': {'crawlerName': [crawler_name], 'state': ['Succeeded']}})
@@ -126,9 +126,9 @@ def create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, sr
     input_json = {
         "src_bucket_name": src_bucket_name, 
         "src_source_name": src_source_name,
-        "src_dataset_name": domain_name,
+        "src_table_name": table_name,
         "src_database_name": glue_db_name,
-        "trg_table_name": domain_name,
+        "trg_table_name": table_name,
         "trg_database_name": db_name,
         "trg_database_schema_name": db_schema }
 
@@ -156,12 +156,43 @@ def create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, sr
     )
 
 # -------------------------------------------------
+# Check if glue job exists
+# -------------------------------------------------
+def gluejob_exists(glue_job_name):
+    try:
+        response = glue_client.get_job(JobName=glue_job_name)
+        return True
+    except glue_client.exceptions.EntityNotFoundException as e:
+        return False
+
+
+
+
+# -------------------------------------------------
 # Create the cloudwatch event for the crawler
 # -------------------------------------------------
-def invoke_gluejob(glue_job_name):
-    client = boto3.client('glue')
-    response = client.start_job_run(JobName = glue_job_name)
+def invoke_gluejob(glue_job_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, glue_db_name, 
+                table_name, db_name, db_schema):
+    if gluejob_exists(glue_job_name):
+        response = glue_client.start_job_run(JobName = glue_job_name)
+    else:
+        data={}
+        data['src_bucket_name'] = src_bucket_name
+        data['src_source_name'] = src_source_name
+        data['src_table_name'] = table_name
+        data['src_database_name'] = glue_db_name
+        data['trg_table_name'] = table_name
+        data['trg_database_name'] = db_name
+        data['trg_database_schema_name'] = db_schema
+        json_str=json.dumps(data)
+        response = lambda_client.invoke(
+            FunctionName= gluejb_lambda_arn, 
+            InvocationType = "Event", 
+            Payload = json_str
+        )
+        response = response['Payload'].read()  
     return response
+
 
 
 # -------------------------------------------------
@@ -189,11 +220,13 @@ def lambda_handler(event, context):
             add_table_partitions(glue_db_name, table_name, partitions, partition_values)
             if replicate:
                 glue_job_name = entity + '_glujb_' + table_name + '_' + environment
-                invoke_gluejob(glue_job_name)
+                invoke_gluejob(glue_job_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, glue_db_name, 
+                            table_name, db_name, db_schema)
         else:
             create_crawler(glue_db_name, lakeformation_role_name, crawler_name, domain_name, source_file_path)
             start_crawler(crawler_name)
-            create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, db_name, db_schema, crawler_name)
+            create_cloudwatch_event(glue_db_name, gluejb_lambda_arn, src_bucket_name, src_source_name, domain_name, table_name, 
+                        db_name, db_schema, crawler_name)
         return {
             'body': json.dumps('SUCCESS'),
             'statusCode': 200

@@ -121,9 +121,6 @@ def create_glue_job(glue_job_name, script_location, script_temp_location):
             '--job-bookmark-option': 'job-bookmark-enable',
             '--TempDir': script_temp_location
         })
-    print(job)
-    resp = glue_client.start_job_run(JobName=job['Name'])
-    print(resp)
 
 
 def lambda_handler(event, context):
@@ -132,7 +129,7 @@ def lambda_handler(event, context):
         print(event)
         src_bucket_name= json.dumps(event['src_bucket_name']).strip('"')
         src_source_name=json.dumps(event['src_source_name']).strip('"')
-        src_table_name=json.dumps(event['src_dataset_name']).strip('"')
+        src_table_name=json.dumps(event['src_table_name']).strip('"')
         src_database_name=json.dumps(event['src_database_name']).strip('"')  
         trg_table_name=json.dumps(event['trg_table_name']).strip('"')
         trg_database_name=json.dumps(event['trg_database_name']).strip('"')
@@ -146,16 +143,9 @@ def lambda_handler(event, context):
         src_columns= get_source_columns(src_table)
         src_partitions = get_source_partitions(src_table)
 
-        print('1')
-        print('2')
         try:
-            print('3')
             job = glue_client.get_job( JobName=glue_job_name )
-            print(job)
-            print('4')
         except Exception as e:
-            print(e)
-            print('5')
             script_buffer=StringIO()
             script_buffer.write(get_header_info())
             script_buffer.write(get_read_catalog(src_database_name, src_table_name))
@@ -165,7 +155,6 @@ def lambda_handler(event, context):
             script_buffer.write(get_write_frame(trg_table_name, trg_database_name, trg_database_schema_name))
             s3_client.put_object(Body=script_buffer.getvalue(), Bucket=src_bucket_name, Key=glue_job_key)
             create_glue_job(glue_job_name, script_location, script_temp_location)
-        print('6')
         glue_client.start_job_run( JobName=glue_job_name )
         return {
             'statusCode': 200,
@@ -177,11 +166,3 @@ def lambda_handler(event, context):
             'body': e,
             'statusCode': 400
         }
-# f=open("gluepatinetjob.txt",'a',encoding='utf-8')
-# f.write(header_info)
-# f.write(read_catalog)
-# f.write(apply_map)
-# f.write(resolve_choice)
-# f.write(drop_null)
-# f.write(write_frame)
-# f.close()
