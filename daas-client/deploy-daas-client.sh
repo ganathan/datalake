@@ -50,9 +50,9 @@ then
     # deploy_stack smgr daas-client-pgsrvls 
     
     # deploy_stack glucon daas-client-pgsrvls
-    deploy_stack lmd glujb-sync-generator 1
-    # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-ingest-daas-core-$environment
-    # deploy_stack s3 daas-client-test-raw-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
+    # deploy_stack lmd glujb-sync-generator 1
+     rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
+     deploy_stack s3 daas-client-test-raw-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
     # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
     # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId $daasCoreEntity
     # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
