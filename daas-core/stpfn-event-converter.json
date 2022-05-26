@@ -19,7 +19,12 @@
             "Variable": "$.extension",
             "StringEquals": "xls",
             "Next": "Excel processor lambda"
-          }
+          },
+          {
+            "Variable": "$.extension",
+            "StringEquals": "md",
+            "Next": "Markdown processor lambda"
+          }          
         ]
       },
       "XML processor lambda": {
@@ -29,6 +34,28 @@
         "Parameters": {
           "Payload.$": "$",
           "FunctionName": "${LambdaArnString}:${Entity}-lmd-xml-processor-${Environment}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      },
+      "Markdown processor lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-markdown-processor-${Environment}"
         },
         "Retry": [
           {

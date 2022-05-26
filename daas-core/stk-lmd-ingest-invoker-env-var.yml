@@ -16,3 +16,5 @@ Environment:
       Fn::Sub: ${AWS::Region}
     ENV_VAR_EVNT_CONVR_STEP_FUNC_ARN:
       Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-event-converter-${Environment}"
+    ENV_VAR_EVNT_CONTROL_STEP_FUNC_ARN:
+      Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-event-controller-${Environment}"

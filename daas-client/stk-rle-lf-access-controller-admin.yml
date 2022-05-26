@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Lake Formation access controller Role to provision access controls on tables for DaaS Client
+
+# Required Parameter: Environment
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  AccountId:
+    Type: String
+    Default: XXXXXXXXX
+
+# Resources
+Resources:
+  CreateRleLFAccessControlRole:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Environment: !Ref Environment
+        Name: !Sub ${Entity}-rle-lf-access-controller-admin-${Environment}
+        AWSTrustPrincipal: !Sub arn:aws:iam::${AccountId}:role/rle-${Entity}-lmd-lf-access-controller-${Environment}
+        Description: !Sub Lake Formation access controller Role to provision access controls on tables for DaaS Client deployed in ${Environment}
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/template/cft-rle-common-template.yml
+      TimeoutInMinutes: '60'
+
+  CreateRleLFAccessControlPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles:
+        - !GetAtt CreateRleLFAccessControlRole.Outputs.RoleName
+      PolicyName: plc-inline-lf-admin-controller
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: 'allowLakeformationAccess'
+            Effect: 'Allow'
+            Action:
+              - 'lakeformation:GrantPermissions'
+              - 'lakeformation:RevokePermissions'
+              - 'lakeformation:ListPermissions'
+              - 'glue:GetTable'
+            Resource:
+              - '*'

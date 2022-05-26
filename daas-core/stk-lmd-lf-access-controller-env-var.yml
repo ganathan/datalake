@@ -1,0 +1,4 @@
+Environment:
+  Variables:
+    ENV_VAR_LF_SERVICE_ROLE: 
+      Fn::Sub: "${Entity}-rle-service-lf-access-controller-${Environment}"

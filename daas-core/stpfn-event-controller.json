@@ -1,0 +1,65 @@
+{
+    "Comment": "A event controller pipeline",
+    "StartAt": "Event analyze",
+    "States": {
+      "Event analyze": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.controller",
+            "StringEquals": "access-control",
+            "Next": "LF access controller lambda"
+          },
+          {
+            "Variable": "$.controller",
+            "StringEquals": "metadata-generate",
+            "Next": "Metadata generator lambda"
+          }         
+        ]
+      },
+      "LF access controller lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-lf-access-controller-${Environment}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      },
+      "Metadata generator lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-raw-metadata-generator-${Environment}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      }
+    }
+  }
