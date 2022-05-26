@@ -11,6 +11,9 @@ Parameters:
     AllowedValues: [dev, tst, int, uat, prd, poc]
   LambdaZipFileName:
     Type: String
+  AccountId:
+    Type: String
+    Default: XXXXXXXXXX
 
 Resources:
   CreateDaaSLFAccessControllLambda:
@@ -41,4 +44,4 @@ Resources:
             Sid: "allowDaaSClientLFAssumeRole"
             Effect: "Allow"
             Action: "sts:AssumeRole"
-            Resource: "arn:aws:iam::708439727567:role/ganesh-client-rle-service-lf-permission-poc"
+            Resource: !Sub "arn:aws:iam::${AccountId}:role/${Entity}-rle-lf-access-controller-admin-${Environment}"
