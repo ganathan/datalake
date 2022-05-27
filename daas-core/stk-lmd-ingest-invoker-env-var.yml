@@ -10,7 +10,7 @@ Environment:
     ENV_VAR_ENVIRONMENT:
       Fn::Sub: ${Environment}
     ENV_VAR_GLUE_SERVICE_ROLE: 
-      Fn::Sub: "rle-metadata-generator-service-role-${Environment}"
+      Fn::Sub: "${Entity}-rle-glue-controller-admin-${Environment}"
     ENV_VAR_LOGGING_LEVEL: "info"
     ENV_VAR_REGION_NAME:
       Fn::Sub: ${AWS::Region}
