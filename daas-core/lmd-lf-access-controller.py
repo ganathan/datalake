@@ -128,9 +128,9 @@ def lambda_handler(event, context):
         print(event)
         database_name = event['database_name']
         account_id = event['account_id']
-        commands = event['commands']
+        params = event['params']
         responses = []
-        for command in commands:
+        for command in params:
             target_lf_service_role_arn='arn:aws:iam::' + account_id + ':role/' + os.environ["ENV_VAR_LF_SERVICE_ROLE"]
             lf_client = get_lakeformation_client(target_lf_service_role_arn)
             (root_command, command_type, permission, table_name, cols, row_filters, role_arn) = parse(command, account_id)
