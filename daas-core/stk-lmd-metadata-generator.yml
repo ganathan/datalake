@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Metadata Generator Lambda for data lake as a service - client (DaaS - Client)
+Description: Raw Metadata Generator Lambda for data lake as a service - Core
 
 Parameters:
   Entity:
@@ -13,167 +13,38 @@ Parameters:
     Type: String
 
 Resources:
-  CreateDaaSMetadataGenLambda:
+  CreateDaaSRawMetadataGenLambda:
     Type: 'AWS::CloudFormation::Stack'
     Properties :
       Parameters:
-        CrossAccountArn: !Sub arn:aws:iam:495430879539:role/rle-${Entity}-lmd-ingest-invoker-${Environment}
-        Entity: !Ref Entity      
         Environment: !Ref Environment
-        Name: !Sub ${Entity}-lmd-metadata-generator-${Environment}
-        Description: !Sub Datalake as a Service Client metadata generator deployed in ${Environment}
+        Name: !Sub ${Entity}-lmd-raw-metadata-generator-${Environment}
+        Description: !Sub Datalake as a Service Core raw metadata generator deployed in ${Environment}
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
-        HandlerName: lmd-metadata-generator.lambda_handler
-        MemorySize: 256
-        Timeout: 60
+        HandlerName: lmd-raw-metadata-generator.lambda_handler
+        MemorySize: 128
+        Timeout: 120
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 
-  CreateDaaSGlueClientServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub 'rle-metadata-generator-service-role-${Environment}'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - glue.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-      Path: "/"
-
-
-  CreateDaaSMetadataGenPolicy:
+  CreateDaaSRawMetadataGenPolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
       Roles:
-        - !GetAtt CreateDaaSMetadataGenLambda.Outputs.LambdaRole
-      PolicyName: plc-inline-metadata-gen
+        - !GetAtt CreateDaaSRawMetadataGenLambda.Outputs.LambdaRole
+      PolicyName: plc-inline-lmd-raw-metadata-gen
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           -
-            Sid: "createDaaSGlueServiceLinkedRole"
+            Sid: "assumeDaaSClientRole"
             Effect: "Allow"
-            Action: "iam:CreateServiceLinkedRole"
-            Resource: "arn:aws:iam::*:role/aws-service-role/glue.amazonaws.com/AWSGlueServiceRole*"
-            Condition:
-              StringLike:
-                iam:PassedToService:
-                      - "glue.amazonaws.com"
-          -
-            Sid: "allowS3Access"
-            Effect: "Allow"
-            Action:
-              - "s3:GetObject"
-            Resource: "*"
-          -
-            Sid: "allowLambdaInvokeAccess"
-            Effect: "Allow"
-            Action: "lambda:*"
+            Action: "sts:AssumeRole"
             Resource: 
-              Fn::Sub: "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-lmd-metadata-generator-${Environment}"
+              Fn::Sub: "arn:aws:iam::*:role/${Entity}-rle-glue-controller-admin-${Environment}"
           -
-            Sid: "allowGlueAccess"
+            Sid: "assumeDaaSClientRole"
             Effect: "Allow"
-            Action:
-              - "s3:PutObject"
-              - "s3:GetObject"
-              - "ec2:RunInstances"
-              - "logs:CreateLogGroup"
-            Resource:
-              - "arn:aws:s3:::*/*aws-glue-*/*"
-              - "arn:aws:s3:::aws-glue-*"
-              - "arn:aws:s3:::aws-glue-*/*"
-              - "arn:aws:ec2:*:*:image/*"
-              - "arn:aws:ec2:*:*:subnet/*"
-              - "arn:aws:ec2:*:*:key-pair/*"
-              - "arn:aws:ec2:*:*:instance/*"
-              - "arn:aws:ec2:*:*:volume/*"
-              - "arn:aws:ec2:*:*:security-group/*"
-              - "arn:aws:ec2:*:*:network-interface/*"
-              - Fn::Sub: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
-          -
-            Sid: "allowIamPolicyForServiceRole"
-            Effect: "Allow"
-            Action:
-              - "iam:AttachRolePolicy"
-              - "iam:DeleteRolePolicy"
-              - "iam:DetachRolePolicy"
-              - "iam:GetRole"
-              - "iam:GetRolePolicy"
-              - "iam:ListAttachedRolePolicies"
-              - "iam:ListRolePolicies"
-              - "iam:PutRolePolicy"
-              - "iam:UpdateRole"
-              - "iam:UpdateRoleDescription"
-            Resource:
-              Fn::Sub:  "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
-          -
-            Sid: "allowGetLogEvents"
-            Effect: "Allow"
-            Action: "logs:GetLogEvents"
-            Resource:
-              -  "arn:aws:logs:*:*:*:/aws-glue/*"
-          -
-            Sid: "allowEventAccess"
-            Effect: "Allow"
-            Action: 
-              - "events:PutRule"
-              - "events:PutTargets"
-            Resource:
-              Fn::Sub: "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/${Entity}-evt-*"
-          -
-            Sid: "allowGluJbLambdaInvokeAccess"
-            Effect: "Allow"
-            Action: "lambda:InvokeFunction"
-            Resource:
-              Fn::Sub: "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-lmd-glujb-sync-generator-${Environment}"
-          -
-            Sid: "passRoleGlueServiceRole"
-            Effect: "Allow"
-            Action: "iam:PassRole"
-            Resource:
-              - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/rle-metadata-generator-service-role-${Environment}"
-            Condition:
-              StringLike:
-                iam:PassedToService:
-                      - "glue.amazonaws.com"
-          -
-            Sid: "allowOtherAccess"
-            Effect: "Allow"
-            Action:
-              - "ec2:DescribeInstances"
-              - "rds:DescribeDBSubnetGroups"
-              - "cloudwatch:GetMetricData"
-              - "s3:ListBucket"
-              - "ec2:DescribeVpcAttribute"
-              - "glue:*"
-              - "iam:ListAttachedRolePolicies"
-              - "cloudwatch:ListDashboards"
-              - "rds:DescribeDBInstances"
-              - "iam:ListRolePolicies"
-              - "ec2:DescribeKeyPairs"
-              - "ec2:DescribeRouteTables"
-              - "iam:GetRole"
-              - "iam:ListRoles"
-              - "s3:GetBucketAcl"
-              - "ec2:DescribeSecurityGroups"
-              - "cloudformation:GetTemplateSummary"
-              - "cloudformation:DescribeStacks"
-              - "ec2:DescribeImages"
-              - "s3:ListAllMyBuckets"
-              - "ec2:DescribeVpcs"
-              - "iam:ListUsers"
-              - "iam:ListGroups"
-              - "ec2:DescribeVpcEndpoints"
-              - "ec2:DescribeSubnets"
-              - "iam:GetRolePolicy"
-              - "s3:GetBucketLocation"
-              - "rds:DescribeDBClusters"
-              - "lambda:AddPermission"
-            Resource: "*"
+            Action: "sts:AssumeRole"
+            Resource: 
+              Fn::Sub: "arn:aws:iam::*:role/rle-${Entity}-lmd-metadata-generator-${Environment}"
