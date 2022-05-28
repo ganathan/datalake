@@ -41,6 +41,8 @@ Resources:
             Action:
               - 'glue:GetPartition'
               - 'glue:GetCrawler'
+              - 'glue:StartCrawler'
+              - 'glue:CreateCrawler'
             Resource:
               - '*'
           - Sid: 'allowEventAccess'
@@ -49,4 +51,21 @@ Resources:
               - 'event:PutRule'
               - 'event:PutTargets'
             Resource:
-              - '*'         
+              - '*'
+          - Sid: 'allowPassRole'
+            Effect: 'Allow'
+            Action:
+              - "iam:PassRole"
+            Resource:
+              - !GetAtt CreateRleGlueControlRole.Outputs.RoleArn
+            Condition:
+              StringLike:
+                "iam:PassedToService": "glue.amazonaws.com"
+          - Sid: 'allowS3Access'
+            Effect: 'Allow'
+            Action:
+              - "s3:ListBucket"
+              - "s3:GetObject"
+            Resource:
+              - "arn:aws:s3:::*raw*/*"
+              - "arn:aws:s3:::*raw*"
