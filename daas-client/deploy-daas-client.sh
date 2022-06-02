@@ -22,11 +22,19 @@ deploy_stack(){
     # call the common template
     sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $serviceType
 
-    if [ "$serviceType" != "tag" ]
+    if [ "$serviceType" == "s3" ]
+    then
+        # call the child stack
+        sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion $daasCoreAccountId $daasCoreEntity
+    fi
+
+    if [ "$serviceType" != "tag" ] && [ "$serviceType" != "s3" ]
     then
         # call the child stack
         sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion $daasCoreAccountId
     fi
+
+
 }
 
 # Check if parameters are defined
@@ -50,9 +58,9 @@ then
     # deploy_stack smgr daas-client-pgsrvls 
     
     # deploy_stack glucon daas-client-pgsrvls
-    # deploy_stack lmd glujb-sync-generator 1
-     rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
-     deploy_stack s3 daas-client-test-raw-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
+    # deploy_stack lmd glujb-sync-generator 2
+    rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
+    deploy_stack s3 lf-cf1-raw-sample-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
     # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
     # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId $daasCoreEntity
     # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment

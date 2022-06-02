@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Test Raw bucket for data lake as a service - client (DaaS - Client)
+Description: Sample Raw bucket for data lake as a service - client (DaaS - Client)
 
 Parameters:
   DaasCoreAccountId:
@@ -23,22 +23,22 @@ Conditions:
 
 # Create Resources
 Resources:
-  CreateDaaSRawBucket:
+  CreateDaaSCF1RawBucket:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         Entity: !Ref Entity      
         Environment: !Sub ${Environment}
-        Name: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket
+        Name: !Sub ${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket
         EventQueueArn: !Ref EventQueueArn
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/s3/scripts/template/cft-s3-common-template.yml
       TimeoutInMinutes: '60'
 
-  CreateDaaSRawBucketPolicy:
+  CreateDaaSRawCF1BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
-    DependsOn: CreateDaaSRawBucket
+    DependsOn: CreateDaaSCF1RawBucket
     Properties:
-      Bucket: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
+      Bucket: !Sub ${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}
       PolicyDocument:
         Statement:
           - Sid: Allow DaaS Core Role access
@@ -57,15 +57,15 @@ Resources:
               - "s3:PutObjectAcl"
               - "s3:ListBucket"
             Resource:
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}/*
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}/*
           - Sid: Deny insecure access
             Effect: Deny
             Principal: "*"
             Action: "*"
             Resource:
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-daas-client-test-raw-bucket-${Environment}/*
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}/*
             Condition:
               Bool:
                 "aws:SecureTransport": false
