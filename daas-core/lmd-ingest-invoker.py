@@ -3,6 +3,7 @@ import json
 import os
 import urllib.parse
 import boto3
+import botocore
 from io import StringIO
 
 
@@ -151,26 +152,38 @@ def invoke_converter_stepfunction(source_bucket, source_key, domain_name, object
 # Get config details from the client s3 bucket
 # ---------------------------------------------------------------------
 def get_config_details(source_bucket):
-    fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
-    data_dict = fileObj['Body'].read()
-    account_id = get_client_accountid(data_dict)
-    region = get_client_region(data_dict)
-    entity = get_client_entity_name(data_dict)
-    (replicate, db_name, db_schema) = get_replication_detail(data_dict) 
-    database_name = get_client_glue_database_name(data_dict)
-    return (account_id, region, entity, replicate, db_name, db_schema, glue_db_name)
+    try:
+        replicate=""
+        db_name=""
+        db_schema=""
+        try:
+            s3_client.head_object(Bucket= source_bucket, Key=daas_config)
+            fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
+            data_dict = fileObj['Body'].read()
+            (replicate, db_name, db_schema) = get_replication_detail(data_dict) 
+            database_name = get_client_glue_database_name(data_dict)
+        except Exception as e:
+            print("Config file not defined! Using system defaults!")
+            account_id = get_client_accountid(data_dict)
+            entity = get_client_entity_name(data_dict)
+        return (account_id, region, entity, replicate, db_name, db_schema, glue_db_name)
+    except Exception as e:
+        print(e)
 
 # ---------------------------------------------------------------------
 # Get details from the event
 # ---------------------------------------------------------------------
 def get_object_details(source_bucket, source_key):
-    domain_name = source_key.split('/')[0:2][1]  # get the second prefix and assign it as the domain name
-    object_name = source_key.split('/')[-1] # get the file name
-    short_path = source_key[0:source_key.rfind('/',0)] # get upto the file path
-    is_dot_folder_object = short_path.rfind('.',0)
-    is_ignore_object = short_path.find('-daas-gen-raw')
-    is_access_control = object_name.find('access-config.txt')
-    return (domain_name, object_name, short_path, is_dot_folder_object, is_ignore_object, is_access_control)
+    try:
+        domain_name = source_key.split('/')[0:2][1]  # get the second prefix and assign it as the domain name
+        object_name = source_key.split('/')[-1] # get the file name
+        short_path = source_key[0:source_key.rfind('/',0)] # get upto the file path
+        is_dot_folder_object = short_path.rfind('.',0)
+        is_ignore_object = short_path.find('-daas-gen-raw')
+        is_access_control = object_name.find('access-config.txt')
+        return (domain_name, object_name, short_path, is_dot_folder_object, is_ignore_object, is_access_control)
+    except Exception as e:
+        print(e)
 
 # ---------------------------------------------------------------------
 # Process object to invoke step function
