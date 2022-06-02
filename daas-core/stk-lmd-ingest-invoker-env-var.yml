@@ -9,7 +9,7 @@ Environment:
       Fn::Sub: "${Entity}-gludb-raw-${Environment}"
     ENV_VAR_ENVIRONMENT:
       Fn::Sub: ${Environment}
-    ENV_VAR_GLUE_SERVICE_ROLE: 
+    ENV_VAR_GLUE_SERVICE_ROLE:
       Fn::Sub: "${Entity}-rle-glue-controller-admin-${Environment}"
     ENV_VAR_LOGGING_LEVEL: "info"
     ENV_VAR_REGION_NAME:
@@ -18,3 +18,7 @@ Environment:
       Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-event-converter-${Environment}"
     ENV_VAR_EVNT_CONTROL_STEP_FUNC_ARN:
       Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-event-controller-${Environment}"
+    ENV_VAR_SETUP_BUCKET:
+      Fn::Sub: "${Entity}-s3-${AWS::Region}-daas-core-setup-bucket-${Environment}"
+    ENV_VAR_SETUP_CONFIG_FILE: ".daas-setup/setup.csv"
+    ENV_VAR_ID_CONFIG_FILE: ".daas-setup/id-config.csv"

@@ -4,6 +4,7 @@ import os
 import urllib.parse
 import boto3
 import botocore
+import csv
 from io import StringIO
 
 
@@ -13,9 +14,11 @@ from io import StringIO
 def init():
     global s3, s3_client, stpfn_client, lambda_client, event_client, glue_client, glue_db_name 
     global glue_admin_role_name, target_lambda_name, daas_config, accountid, environment
-    global region, event_converter_stepfn_arn, event_controller_stepfn_arn
+    global region, event_converter_stepfn_arn, event_controller_stepfn_arn, s3_core, setup_bucket
+    global setup_config_file, id_config_file
     stpfn_client = boto3.client('stepfunctions')
     s3_client = boto3.client('s3')
+    s3_core = boto3.client('s3')
     s3 = boto3.resource('s3')
     glue_client = boto3.client('glue')
     lambda_client = boto3.client('lambda')
@@ -29,63 +32,16 @@ def init():
     target_lambda_name = os.environ["ENV_VAR_CLIENT_LAMBDA_NAME"]
     event_converter_stepfn_arn = os.environ["ENV_VAR_EVNT_CONVR_STEP_FUNC_ARN"]
     event_controller_stepfn_arn = os.environ["ENV_VAR_EVNT_CONTROL_STEP_FUNC_ARN"]
+    setup_bucket = os.environ["ENV_VAR_SETUP_BUCKET"]
+    setup_config_file = os.environ["ENV_VAR_SETUP_CONFIG_FILE"]
+    id_config_file = os.environ["ENV_VAR_ID_CONFIG_FILE"]
 
- 
-# -------------------------------------------------
-# Create the cloudwatch event for the crawler
-# -------------------------------------------------
-def create_cloudwatch_event(crawler_name):
-    rule_name = crawler_name + "-event"
-    event_json_string = json.dumps({'source': ['aws.glue'], 'detail-type': ['Glue Crawler State Change'],
-                                    'detail': {'crawlerName': [crawler_name], 'state': ['Succeeded']}})
- 
-    # Create the rule first
-    rule_response = event_client.put_rule(
-        Name=rule_name,
-        EventPattern=event_json_string,
-        State='ENABLED',
-        Description='Cloud Watch event rule for crawler ' + crawler_name
-    )
- 
-    # Place the lambda target for the rule
-    response = event_client.put_targets(
-        Rule=rule_name,
-        Targets=[{'Id': rule_name, 'Arn': target_lambda_arn}, ]
-    )
- 
-    # Grant invoke permission to Lambda
-    lambda_client.add_permission(
-        FunctionName=target_lambda_name,
-        StatementId=rule_name,
-        Action='lambda:InvokeFunction',
-        Principal='events.amazonaws.com',
-        SourceArn=rule_response['RuleArn'],
-    )
-
-# ----------------------------------------------------------
-# Read the account id from the daas-config file
-# ----------------------------------------------------------
-def get_client_accountid(data_dict):
-    accountid = json.loads(data_dict)['account_id']
-    return accountid
-
-# ----------------------------------------------------------
-# Read the region from the daas-config file
-# ----------------------------------------------------------
-def get_client_region(data_dict):
-    region = json.loads(data_dict)['region']
-    return region
-
-# ----------------------------------------------------------
-# Read the entity from the daas-config file
-# ----------------------------------------------------------
-def get_client_entity_name(data_dict):
-    entity_name = json.loads(data_dict)['entity']
-    return entity_name
-
-def get_client_glue_database_name(data_dict):   
-    #glue_db_name = data_dict['glue_database']
-    glue_db_name = 'ganesh-gludb-raw-poc'
+# -------------------------------------------------------------------------------------------
+# Read the replication status, database name and database schema  from the daas-config file
+# -------------------------------------------------------------------------------------------
+def get_client_glue_database_name(data_dict, entity):
+    glue_db_name=""
+    glue_db_name = data_dict['glue_database']
     return glue_db_name
 
 # -------------------------------------------------------------------------------------------
@@ -147,7 +103,39 @@ def invoke_converter_stepfunction(source_bucket, source_key, domain_name, object
     except Exception as e:
         print(e)
         # raise ValueError(f"Failed while invoking step function {state_machine_arn}  {params} {e}")
+    
 
+# ---------------------------------------------------------------------
+# Get config details from the client s3 bucket
+# ---------------------------------------------------------------------        
+def get_client_details(source_bucket):
+    try:
+        raw_indx = source_bucket.find('-raw-')
+        client_indx = source_bucket.rfind('-',0,raw_indx) + 1
+        client_id = source_bucket[client_indx:raw_indx]
+        entity = source_bucket[0:source_bucket.find('-')]
+        config_fileObj = s3_core.get_object(Bucket=setup_bucket, Key=id_config_file)
+        data = config_fileObj['Body'].read().decode('utf-8').splitlines()
+        records = csv.reader(data)
+        headers = next(records)
+        account_id=''
+        for record in records:
+            if record[0]==client_id:
+                account_id=record[2]
+                continue
+        setup_fileObj = s3_core.get_object(Bucket=setup_bucket, Key=setup_config_file)
+        data = setup_fileObj['Body'].read().decode('utf-8').splitlines()
+        records = csv.reader(data)
+        headers = next(records)
+        database_name=''
+        for record in records:
+            if record[0]=='gluedb':
+                database_name=record[1]
+        return (account_id, entity, database_name)
+    except Exception as e:
+        raise ValueError(f"Unable to get config details {e}")
+        
+        
 # ---------------------------------------------------------------------
 # Get config details from the client s3 bucket
 # ---------------------------------------------------------------------
@@ -156,17 +144,21 @@ def get_config_details(source_bucket):
         replicate=""
         db_name=""
         db_schema=""
+        glue_db_name=""
         try:
             s3_client.head_object(Bucket= source_bucket, Key=daas_config)
             fileObj = s3_client.get_object(Bucket= source_bucket, Key=daas_config)
             data_dict = fileObj['Body'].read()
             (replicate, db_name, db_schema) = get_replication_detail(data_dict) 
-            database_name = get_client_glue_database_name(data_dict)
+            glue_db_name = get_client_glue_database_name(data_dict)
         except Exception as e:
             print("Config file not defined! Using system defaults!")
-            account_id = get_client_accountid(data_dict)
-            entity = get_client_entity_name(data_dict)
-        return (account_id, region, entity, replicate, db_name, db_schema, glue_db_name)
+        (account_id, entity, database_name) = get_client_details(source_bucket)
+        if not glue_db_name:
+            glue_db_name=database_name  + entity + 'raw'
+        else:
+            glue_db_name=glue_db_name + entity + 'raw'
+        return (account_id, entity, replicate, db_name, db_schema, glue_db_name)
     except Exception as e:
         print(e)
 
@@ -188,19 +180,18 @@ def get_object_details(source_bucket, source_key):
 # ---------------------------------------------------------------------
 # Process object to invoke step function
 # ---------------------------------------------------------------------
-def process_object_metadata(source_bucket, source_key, domain_name,controller):          
+def process_object_metadata(source_bucket, source_key, region, domain_name,controller):          
     partition_values=[]
     source_name = source_key.split('/')[0:1][0]  # get the first prefix and assign it as the source name
     partitions = source_key.split('/')[2:-1]  # Remove source name, domain name in the front and the key at the end
     for key in partitions:
         value = key.split('=')[1]
-        print(value)
         if value:
             partition_values.append(value)
         else:
             partition_values.append(key)
     path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
-    (account_id, region, entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
+    (account_id, entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
     target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
     target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
     crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
@@ -240,10 +231,11 @@ def lambda_handler(event, context):
             for record in json.loads(event['Records'][0]['body'])['Records']:
                 source_bucket = record['s3']['bucket']['name']
                 source_key = urllib.parse.unquote_plus(record['s3']['object']['key'], encoding='utf-8')
+                region = record['awsRegion']
                 (domain_name, object_name, short_path, is_dot_folder_object, is_ignore_object, is_access_control) = get_object_details(source_bucket, source_key)
                 if is_dot_folder_object != -1 and is_access_control != -1:
                     controller = 'access-control'
-                    (account_id, region, entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
+                    (account_id, entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
                     fileObj = s3_client.get_object(Bucket= source_bucket, Key=source_key)
                     params = fileObj['Body'].read().decode('utf-8').splitlines()
                     resp = invoke_controller_stepfunction(account_id, glue_db_name, params, controller, state_machine_arn=event_controller_stepfn_arn)
@@ -253,7 +245,7 @@ def lambda_handler(event, context):
                         resp = invoke_converter_stepfunction(source_bucket, source_key, domain_name, object_name, extension, state_machine_arn=event_converter_stepfn_arn)
                     else:
                         controller = 'metadata-generate'
-                        resp = process_object_metadata(source_bucket, source_key, domain_name,controller)
+                        resp = process_object_metadata(source_bucket, source_key, region, domain_name,controller)
                 else:
                     print(source_key + " processing ignored!")
             return {
