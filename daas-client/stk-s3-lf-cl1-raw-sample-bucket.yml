@@ -23,22 +23,22 @@ Conditions:
 
 # Create Resources
 Resources:
-  CreateDaaSCF1RawBucket:
+  CreateDaaScl1RawBucket:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         Entity: !Ref Entity      
         Environment: !Sub ${Environment}
-        Name: !Sub ${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket
+        Name: !Sub ${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket
         EventQueueArn: !Ref EventQueueArn
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/s3/scripts/template/cft-s3-common-template.yml
       TimeoutInMinutes: '60'
 
-  CreateDaaSRawCF1BucketPolicy:
+  CreateDaaSRawcl1BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
-    DependsOn: CreateDaaSCF1RawBucket
+    DependsOn: CreateDaaScl1RawBucket
     Properties:
-      Bucket: !Sub ${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}
+      Bucket: !Sub ${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}
       PolicyDocument:
         Statement:
           - Sid: Allow DaaS Core Role access
@@ -57,15 +57,15 @@ Resources:
               - "s3:PutObjectAcl"
               - "s3:ListBucket"
             Resource:
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}/*
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}/*
           - Sid: Deny insecure access
             Effect: Deny
             Principal: "*"
             Action: "*"
             Resource:
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cf1-raw-sample-bucket-${Environment}/*
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}/*
             Condition:
               Bool:
                 "aws:SecureTransport": false
