@@ -1,0 +1,7 @@
+code,acronym,description
+raw,raw,Ingestion Layer
+curate,cur,Curation Layer
+distribution,dst,Distribution Layer
+ingest,raw,Ingestion Layer
+lake,lk,Datalake
+gluedb,daas,Glue Default database
