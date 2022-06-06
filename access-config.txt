@@ -1,0 +1,2 @@
+GRANT SELECT ON logs COLUMNS ticker, fundname, dailyytd TO aws_test_user
+GRANT SELECT ON logs COLUMNS gross, net TO aws_test_user

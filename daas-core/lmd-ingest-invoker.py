@@ -210,7 +210,7 @@ def process_object_metadata(source_bucket, source_key, region, domain_name,contr
     data['domain_name'] = domain_name
     data['crawler_name'] = crawler_name
     data['table_name'] = table_name
-    data['partitions'] = value
+    data['partitions'] = partitions
     data['partition_values'] = partition_values
     data['replicate'] = replicate
     data['db_name'] = db_name
