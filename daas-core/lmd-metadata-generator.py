@@ -33,8 +33,10 @@ def partition_exists(glue_client, glue_db_name, table_name, partition_values):
             TableName=table_name,
             PartitionValues=partition_values
         )
+        print('partition %s does not exist for table_name %s in database %s ' %(partition_values, table_name, glue_db_name))
         return True
     except glue_client.exceptions.EntityNotFoundException:
+        print('partition %s does not exist for table_name %s in database %s ' %(partition_values, table_name, glue_db_name))
         return False
 
 
@@ -109,6 +111,7 @@ def start_crawler(glue_client, crawler_name):
     response = glue_client.start_crawler(
         Name=crawler_name
     )
+    return response
 
 
 # -------------------------------------------------
@@ -188,15 +191,15 @@ def lambda_handler(event, context):
         glue_client = get_glue_client(target_glue_service_role_arn)
         if crawler_exits(glue_client, crawler_name):
             print('1a')
-            add_table_partitions(glue_client, glue_db_name, table_name, partitions, partition_values)
+            resp = add_table_partitions(glue_client, glue_db_name, table_name, partitions, partition_values)
         else:
             print('1b')
-            create_crawler(glue_client, glue_db_name, glue_admin_role_name, crawler_name, domain_name, source_file_path)
+            resp = create_crawler(glue_client, glue_db_name, glue_admin_role_name, crawler_name, domain_name, source_file_path)
             print('1c')
-            start_crawler(glue_client, crawler_name)
+            resp = start_crawler(glue_client, crawler_name)
             # create_cloudwatch_event(glue_client, crawler_name, target_lambda_arn, target_lambda_name)
         return {
-            'body': json.dumps('SUCCESS'),
+            'body': resp,
             'statusCode': 200
         }
     except Exception as e:
