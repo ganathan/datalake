@@ -188,7 +188,7 @@ def get_object_details(source_bucket, source_key):
         is_dot_folder_object = short_path.rfind('.',0)
         is_ignore_object = short_path.find('-daas-gen-raw')
         is_access_control = object_name.find('access-config.txt')
-        return (domain_name, object_name, short_path, is_dot_folder_object, is_ignore_object, is_access_control)
+        return (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, is_ignore_object, is_access_control)
     except Exception as e:
         print(e)
 
@@ -247,14 +247,14 @@ def lambda_handler(event, context):
                 source_bucket = record['s3']['bucket']['name']
                 source_key = urllib.parse.unquote_plus(record['s3']['object']['key'], encoding='utf-8')
                 region = record['awsRegion']
-                (domain_name, object_name, short_path, is_dot_folder_object, is_ignore_object, is_access_control) = get_object_details(source_bucket, source_key)
+                (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, is_ignore_object, is_access_control) = get_object_details(source_bucket, source_key)
                 if is_dot_folder_object != -1 and is_access_control != -1:
                     controller = 'access-control'
                     (account_id, entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
                     fileObj = s3_client.get_object(Bucket= source_bucket, Key=source_key)
                     params = fileObj['Body'].read().decode('utf-8').splitlines()
                     resp = invoke_controller_stepfunction(account_id, glue_db_name, params, controller, state_machine_arn=event_controller_stepfn_arn)
-                elif object_name and is_dot_folder_object == -1 and is_ignore_object == -1:
+                elif is_object_file and object_name and is_dot_folder_object == -1 and is_ignore_object == -1:
                     extension = object_name.split('.')[-1].lower() # get the file extension.
                     if extension == 'xml' or extension == 'xls' or extension == 'xlsx' or extension == 'md':
                         resp = invoke_converter_stepfunction(source_bucket, source_key, domain_name, object_name, extension, state_machine_arn=event_converter_stepfn_arn)
@@ -262,7 +262,10 @@ def lambda_handler(event, context):
                         controller = 'metadata-generate'
                         resp = process_object_metadata(source_bucket, source_key, region, domain_name,controller)
                 else:
-                    print(source_key + " processing ignored!")
+                    if is_dot_folder_object != -1 or is_ignore_object != -1:
+                        resp= source_bucket +  '/' + source_key + ' is not a valid file.. processing ignored!'
+                    else:
+                        resp=source_bucket +  '/' + source_key + ' is not a valid file to process. Please ensure files are nested with data source and dataset prefix...  processing ignored!'
             return {
                 'body': resp,
                 'statusCode': 200
