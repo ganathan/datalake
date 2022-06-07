@@ -48,17 +48,15 @@ def add_table_partitions(glue_client, glue_db_name, table_name, partitions, part
             DatabaseName=glue_db_name,
             Name=table_name
         )
+        
+
 
         # Extract the existing storage descriptor and Create custom storage descriptor with new partition location
         storage_descriptor = get_table_response['Table']['StorageDescriptor']
         custom_storage_descriptor = copy.deepcopy(storage_descriptor)
-        custom_storage_descriptor['Location'] = storage_descriptor['Location'] + partitions + '/'
-
-        print('inside add table partition ' + table_name)
-        print(custom_storage_descriptor)
-        print(partitions)
-        print(partition_values)
-        print(glue_db_name)
+        partition = ''.join(str('/' + kv ) for kv in partitions)[1:]        
+        custom_storage_descriptor['Location'] = storage_descriptor['Location'] + partition
+        
 
          # Create partitions in the glue table
         response = glue_client.create_partition(
