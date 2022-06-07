@@ -13,7 +13,7 @@ from io import StringIO
 # --------------------------------------------------
 def init():
     global s3, s3_client, stpfn_client, lambda_client, event_client, glue_client, glue_db_name 
-    global glue_admin_role_name, target_lambda_name, daas_config, accountid, environment
+    global glue_admin_role_name, target_lambda_name, daas_config, environment
     global region, event_converter_stepfn_arn, event_controller_stepfn_arn, s3_core, setup_bucket
     global setup_config_file, id_config_file
     stpfn_client = boto3.client('stepfunctions')
@@ -23,7 +23,6 @@ def init():
     glue_client = boto3.client('glue')
     lambda_client = boto3.client('lambda')
     event_client = boto3.client('events')
-    accountid = os.environ["ENV_VAR_ACCOUNT_ID"]
     environment = os.environ["ENV_VAR_ENVIRONMENT"]
     region = os.environ["ENV_VAR_REGION_NAME"]
     daas_config = os.environ["ENV_VAR_DAAS_CONFIG_FILE"]
@@ -162,11 +161,27 @@ def get_config_details(source_bucket):
     except Exception as e:
         print(e)
 
+
+# ---------------------------------------------------------------------
+# Check if the given key is a file
+# ---------------------------------------------------------------------      
+def is_file(source_bucket, key, prefix):
+    try:
+        if (len(prefix) > 2):
+            s3_client.head_object(Bucket= source_bucket, Key=key)
+            return True
+    except Exception as e:
+        print(f'key {key} in bucket {source_bucket} is not a valid file!')
+        return False
+
+
 # ---------------------------------------------------------------------
 # Get details from the event
 # ---------------------------------------------------------------------
 def get_object_details(source_bucket, source_key):
     try:
+        prefix=source_key.split('/')
+        is_object_file = is_file(source_bucket, source_key, prefix)        
         domain_name = source_key.split('/')[0:2][1]  # get the second prefix and assign it as the domain name
         object_name = source_key.split('/')[-1] # get the file name
         short_path = source_key[0:source_key.rfind('/',0)] # get upto the file path
@@ -194,7 +209,7 @@ def process_object_metadata(source_bucket, source_key, region, domain_name,contr
     (account_id, entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
     target_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + target_lambda_name
     target_lambda_role_arn = 'arn:aws:iam::' + account_id + ':role/rle-' + target_lambda_name
-    crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler'
+    crawler_name = entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler' + environment
     target_gluejb_lambda_arn = 'arn:aws:lambda:' + region + ':' + account_id + ':function:' + entity + '-lmd-glujb-sync-generator-' + environment
     table_name = domain_name.replace('-','_')
     data={}
