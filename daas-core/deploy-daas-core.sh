@@ -39,8 +39,8 @@ then
     # deploy_stack sqs ingest-daas-core 
     # deploy_stack sgrp lmd-default
     # deploy_stack lmdlyr xmltodict
-    deploy_stack lmd ingest-invoker 1
-    # deploy_stack lmd raw-metadata-generator 2    
+    # deploy_stack lmd ingest-invoker 1
+    deploy_stack lmd raw-metadata-generator 1  
     # deploy_stack lmd excel-processor 2
     # deploy_stack lmd xml-processor 1
     # deploy_stack stpfn event-converter

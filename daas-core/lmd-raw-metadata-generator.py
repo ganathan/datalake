@@ -1,12 +1,11 @@
 # --------------------------------------------------------------------------
 # Author:       Ganesh Nathan
-# Date:         05/08/2020
+# Date:         05/08/2019
 # Description:  DaaS common lambda to create distribution glue crawler, catalog and table
 # --------------------------------------------------------------------------
 import copy
 import json
 import boto3
-import os
     
 
 # -------------------------------------------------
@@ -152,7 +151,6 @@ def create_cloudwatch_event(crawler_name, target_lambda_arn, target_lambda_name)
 # -------------------------------------------------
 def get_glue_client(target_glue_service_role_arn):
     sts_connection = boto3.client('sts')
-    # target_glue_service_role_arn = 'arn:aws:iam::708439727567:role/rle-ganesh-lmd-metadata-generator-poc'
     print('assuming role..... ' + target_glue_service_role_arn)
     
     daas_client = sts_connection.assume_role(

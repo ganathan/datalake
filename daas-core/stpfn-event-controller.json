@@ -14,7 +14,12 @@
             "Variable": "$.controller",
             "StringEquals": "metadata-generate",
             "Next": "Metadata generator lambda"
-          }         
+          },
+          {
+            "Variable": "$.controller",
+            "StringEquals": "metadata-purger",
+            "Next": "Metadata pruger lambda"
+          }    
         ]
       },
       "LF access controller lambda": {
@@ -46,6 +51,28 @@
         "Parameters": {
           "Payload.$": "$",
           "FunctionName": "${LambdaArnString}:${Entity}-lmd-raw-metadata-generator-${Environment}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      },
+      "Metadata purger lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-raw-metadata-purger-${Environment}"
         },
         "Retry": [
           {
