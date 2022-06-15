@@ -44,25 +44,29 @@ then
     # deploy_stack tag
     # deploy_stack vpc
     # sleep 90
+
     # deploy_stack ngw
     # deploy_stack s3 daas-client-athena-log
     # deploy_stack sgrp ec2-default
     # deploy_stack sgrp rds-pgrs-default
     # deploy_stack sgrp lmd-default
-    # deploy_stack lmd metadata-generator 1
+    # sleep 90
 
     # Create aurora serverless database manually, take note of username and password
-
     # Once the secrets manager is created update the username, password etc with its proper value in the console.
     # {"username": "xxxx", "password": "xxx", "endpoint": "xxxxxxx", "url":"jdbc:postgresql://xxxxx.xxxx.xxxxx.rds.amazonaws.com:5432/daas","port":"5432"}
     # deploy_stack smgr daas-client-pgsrvls 
-    
+    # sleep 90
+
     # deploy_stack glucon daas-client-pgsrvls
     # deploy_stack lmd glujb-sync-generator 2
-    rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
-    deploy_stack s3 lf-cl1-raw-sample-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
+    # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
+    # deploy_stack s3 lf-cl1-raw-sample-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
+    # sleep 90
+    
     # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
     # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId $daasCoreEntity
+    
     # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
     # deploy_stack ec2 daas-client-bastn-host 
 
