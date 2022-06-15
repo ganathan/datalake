@@ -12,7 +12,7 @@ Parameters:
     AllowedValues: [dev, tst, int, uat, prd, poc]
   AccountId:
     Type: String
-    Default: 495430879539
+    Default: XXXXXXXXX
 
 # Resources
 Resources:
