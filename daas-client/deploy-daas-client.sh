@@ -41,17 +41,17 @@ deploy_stack(){
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ] 
 then
 
-    deploy_stack tag
-    deploy_stack vpc
+    # deploy_stack tag
+    # deploy_stack vpc
     # sleep 90
 
     # deploy_stack ngw
     # deploy_stack s3 daas-client-athena-log
     # sleep 90
 
-    # deploy_stack sgrp ec2-default
-    # deploy_stack sgrp rds-pgrs-default
-    # deploy_stack sgrp lmd-default
+    deploy_stack sgrp ec2-default
+    deploy_stack sgrp rds-pgrs-default
+    deploy_stack sgrp lmd-default
     # sleep 90
 
     # Create aurora serverless database manually, take note of username and password
