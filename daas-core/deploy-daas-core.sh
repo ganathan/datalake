@@ -49,7 +49,7 @@ then
     # deploy_stack lmd xml-processor 1
     # sleep 90
 
-    deploy_stack stpfn event-converter
+    # deploy_stack stpfn event-converter
     deploy_stack stpfn event-controller
     # deploy_stack s3 daas-core-setup-bucket
 
