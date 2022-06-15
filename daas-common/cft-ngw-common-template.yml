@@ -55,22 +55,6 @@ Resources:
           Fn::ImportValue: !Sub '${Entity}-private-route-table-1'
         DestinationCidrBlock: 0.0.0.0/0
         NatGatewayId: !Ref CreateNATGateway
-  
-  AssociatePrivSubnet1:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-        RouteTableId:
-          Fn::ImportValue: !Sub '${Entity}-private-route-table-1'
-        SubnetId:
-          Fn::ImportValue: !Sub '${Entity}-private-subnet-2'
-
-  AssociatePrivSubnet2:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-        RouteTableId:
-          Fn::ImportValue: !Sub '${Entity}-private-route-table-1'
-        SubnetId:
-          Fn::ImportValue: !Sub '${Entity}-private-subnet-1'
 
 Outputs:
   NgwStackName:
