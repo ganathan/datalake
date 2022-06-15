@@ -45,10 +45,12 @@ then
     # deploy_stack lmd ingest-invoker 1
     # deploy_stack lmd raw-metadata-generator 1  
     # deploy_stack lmd raw-metadata-purger 1  
-    deploy_stack lmd excel-processor 1
+    # deploy_stack lmd excel-processor 1
     # deploy_stack lmd xml-processor 1
-    # deploy_stack stpfn event-converter
-    # deploy_stack stpfn event-controller
+    # sleep 90
+
+    deploy_stack stpfn event-converter
+    deploy_stack stpfn event-controller
     # deploy_stack s3 daas-core-setup-bucket
 
     # deploy_stack sqs curate-daas-core 
