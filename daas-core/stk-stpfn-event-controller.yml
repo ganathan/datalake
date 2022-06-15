@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Step Function state machine for event controller in data lake as a service - core (DaaS - Client)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+     Type: String
+     Default: dev
+     AllowedValues: [dev, tst, int, uat, prd, poc]
+
+Resources:
+  CreateStpfnForEvntController:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Bucket: !Sub '${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}'
+        Description: Step Function state machine for event controller in Daas Client      
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        Key: !Sub stpfn/scripts/stacks/stk-stpfn-event-controller/stpfn-event-controller.json
+        Name: !Sub '${Entity}-stpfn-event-controller-${Environment}'
+        StepFnVarFileName: !Sub stacks/stk-stpfn-event-controller/stk-stpfn-event-controller-var.yml
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/stpfn/scripts/template/cft-stpfn-common-template.yml
+      TimeoutInMinutes: '60'
