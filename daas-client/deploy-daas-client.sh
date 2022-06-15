@@ -41,12 +41,14 @@ deploy_stack(){
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ] 
 then
 
-    # deploy_stack tag
-    # deploy_stack vpc
+    deploy_stack tag
+    deploy_stack vpc
     # sleep 90
 
     # deploy_stack ngw
     # deploy_stack s3 daas-client-athena-log
+    # sleep 90
+
     # deploy_stack sgrp ec2-default
     # deploy_stack sgrp rds-pgrs-default
     # deploy_stack sgrp lmd-default
@@ -63,12 +65,16 @@ then
     # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
     # deploy_stack s3 lf-cl1-raw-sample-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
     # sleep 90
-    
-    # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
-    # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId $daasCoreEntity
-    
-    # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
+
+    # create a keypair (pem file). Go to ec2 in cosole choose Create Key Pair and provide name <entity>-ec2-bastion-host.pem Add tag as needed. Browser will download the file.
+    # deploy ec2 with additional parameters. <NOTE: daas core account id and pem key created above>
     # deploy_stack ec2 daas-client-bastn-host 
+    # sleep 90
+
+    # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
+    # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId $daasCoreEntity    
+    # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
+
 
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment> <<daas core account id>> <<ec2 key pair name>>"
