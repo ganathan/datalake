@@ -53,6 +53,11 @@ then
     # deploy_stack stpfn event-controller
     # deploy_stack s3 daas-core-setup-bucket
 
+    # NOTE: open the id-config.csv file and update the account id with the appropriate client account id.
+    bucketPath=$entity-s3-$region-daas-core-setup-bucket-$environment
+    aws s3 cp ../setup.csv s3://$bucketPath/.daas-setup/setup.csv
+    aws s3 cp ../id-config.csv s3://$bucketPath/.daas-setup/id-config.csv
+
     # deploy_stack sqs curate-daas-core 
     # deploy_stack lmd curate-model-generator 1
 else

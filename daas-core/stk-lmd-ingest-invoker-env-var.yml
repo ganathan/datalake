@@ -2,15 +2,9 @@ Environment:
   Variables:
     ENV_VAR_ACCOUNT_ID:
       Fn::Sub: "${AWS::AccountId}"
-    ENV_VAR_CLIENT_LAMBDA_NAME: 
-      Fn::Sub: "${Entity}-lmd-metadata-generator-${Environment}"
     ENV_VAR_DAAS_CONFIG_FILE: ".daas-config/config.json"
-    ENV_VAR_DAAS_CORE_GLUE_DB:
-      Fn::Sub: "${Entity}-gludb-raw-${Environment}"
     ENV_VAR_ENVIRONMENT:
       Fn::Sub: ${Environment}
-    ENV_VAR_GLUE_SERVICE_ROLE:
-      Fn::Sub: "${Entity}-rle-glue-controller-admin-${Environment}"
     ENV_VAR_LOGGING_LEVEL: "info"
     ENV_VAR_REGION_NAME:
       Fn::Sub: ${AWS::Region}

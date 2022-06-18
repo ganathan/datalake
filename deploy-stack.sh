@@ -158,6 +158,16 @@ then
             --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
             --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+    elif [ "$serviceType" == "rle" ]
+    then
+        # create or update the cloudformation stack
+        aws cloudformation $type-stack \
+            --stack-name $stackName-$environment \
+            --region $region \
+            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
+                         ParameterKey=DaasCoreAccountId,ParameterValue=$daasCoreAccountId ParameterKey=DaasCoreEntity,ParameterValue=$daasCoreEntity \
+            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
     elif [ "$serviceType" == "vpc" ]
     then
         # create or update the cloudformation stack

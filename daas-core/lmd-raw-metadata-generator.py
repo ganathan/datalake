@@ -176,8 +176,6 @@ def lambda_handler(event, context):
         glue_db_name = params['glue_db_name']
         print(glue_db_name)
         glue_admin_role_name = params['glue_admin_role_name']
-        target_lambda_name = params['target_lambda_name']
-        target_lambda_arn = params['target_lambda_arn']
         crawler_name = params['crawler_name']
         source_file_path = params['source_file_path']
         domain_name = params['domain_name']

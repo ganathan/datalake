@@ -3,6 +3,12 @@ Description: Lake Formation access controller Role to provision access controls 
 
 # Required Parameter: Environment
 Parameters:
+  DaasCoreAccountId:
+    Type: String
+    Default: false
+  DaasCoreEntity:
+    Type: String
+    Default: false
   Entity:
     Type: String
     Default: ganesh
@@ -10,9 +16,6 @@ Parameters:
     Type: String
     Default: dev
     AllowedValues: [dev, tst, int, uat, prd, poc]
-  AccountId:
-    Type: String
-    Default: XXXXXXXXX
 
 # Resources
 Resources:
@@ -22,7 +25,7 @@ Resources:
       Parameters:
         Environment: !Ref Environment
         Name: !Sub ${Entity}-rle-lf-access-controller-admin-${Environment}
-        AWSTrustPrincipal: !Sub arn:aws:iam::${AccountId}:role/rle-${Entity}-lmd-lf-access-controller-${Environment}
+        AWSTrustPrincipal: !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-lf-access-controller-${Environment}
         Description: !Sub Lake Formation access controller Role to provision access controls on tables for DaaS Client deployed in ${Environment}
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/template/cft-rle-common-template.yml
       TimeoutInMinutes: '60'
