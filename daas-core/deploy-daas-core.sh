@@ -37,27 +37,31 @@ then
     # sleep 90
     
     # deploy_stack ngw
-    # deploy_stack sqs ingest-daas-core 
     # deploy_stack sgrp lmd-default
     # deploy_stack lmdlyr xmltodict
+    # deploy_stack s3 daas-core-setup-bucket    
     # sleep 90
 
-    # deploy_stack lmd ingest-invoker 1
-    # deploy_stack lmd raw-metadata-generator 1  
+    # NOTE: open the id-config.csv file and update the account id with the appropriate client account id.
+    # bucketPath=$entity-s3-$region-daas-core-setup-bucket-$environment
+    # aws s3 cp ../setup.csv s3://$bucketPath/.daas-setup/setup.csv
+    # aws s3 cp ../id-config.csv s3://$bucketPath/.daas-setup/id-config.csv
+    # sleep 90
+
+    # NOTE: Ingestion Layer
+    # deploy_stack sqs ingest-daas-core 
+    deploy_stack lmd ingest-invoker 1
+    # deploy_stack lmd ingest-metadata-generator 1
     # deploy_stack lmd raw-metadata-purger 1  
     # deploy_stack lmd excel-processor 1
     # deploy_stack lmd xml-processor 1
+    # deploy_stack stpfn ingest-event-controller
     # sleep 90
 
     # deploy_stack stpfn event-converter
-    # deploy_stack stpfn event-controller
-    # deploy_stack s3 daas-core-setup-bucket
-
-    # NOTE: open the id-config.csv file and update the account id with the appropriate client account id.
-    bucketPath=$entity-s3-$region-daas-core-setup-bucket-$environment
-    aws s3 cp ../setup.csv s3://$bucketPath/.daas-setup/setup.csv
-    aws s3 cp ../id-config.csv s3://$bucketPath/.daas-setup/id-config.csv
-
+    # sleep 90
+    
+    # NOTE: Curation Layer
     # deploy_stack sqs curate-daas-core 
     # deploy_stack lmd curate-model-generator 1
 else

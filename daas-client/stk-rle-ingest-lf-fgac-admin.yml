@@ -24,8 +24,8 @@ Resources:
     Properties:
       Parameters:
         Environment: !Ref Environment
-        Name: !Sub ${Entity}-rle-lf-access-controller-admin-${Environment}
-        AWSTrustPrincipal: !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-lf-access-controller-${Environment}
+        Name: !Sub ${Entity}-rle-ingest-lf-fgac-admin-${Environment}
+        AWSTrustPrincipal: !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-ingest-lf-fgac-${Environment}
         Description: !Sub Lake Formation access controller Role to provision access controls on tables for DaaS Client deployed in ${Environment}
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/template/cft-rle-common-template.yml
       TimeoutInMinutes: '60'
@@ -35,7 +35,7 @@ Resources:
     Properties:
       Roles:
         - !GetAtt CreateRleLFAccessControlRole.Outputs.RoleName
-      PolicyName: plc-inline-lf-admin-controller
+      PolicyName: plc-inline-ingest-lf-fgac
       PolicyDocument:
         Version: '2012-10-17'
         Statement:

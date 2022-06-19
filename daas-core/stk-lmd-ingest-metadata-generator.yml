@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Raw Metadata Generator Lambda for data lake as a service - Core
+Description: Ingestion Metadata Generator Lambda for data lake as a service - Core
 
 Parameters:
   Entity:
@@ -13,27 +13,27 @@ Parameters:
     Type: String
 
 Resources:
-  CreateDaaSRawMetadataGenLambda:
+  CreateDaaSIngMetadataGenLambda:
     Type: 'AWS::CloudFormation::Stack'
     Properties :
       Parameters:
-        Description: !Sub Datalake as a Service Core raw metadata generator deployed in ${Environment}
+        Description: !Sub Datalake as a Service Core ingest metadata generator deployed in ${Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
-        HandlerName: lmd-raw-metadata-generator.lambda_handler        
+        HandlerName: lmd-ingest-metadata-generator.lambda_handler        
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         MemorySize: 128
-        Name: !Sub ${Entity}-lmd-raw-metadata-generator-${Environment}        
+        Name: !Sub ${Entity}-lmd-ingest-metadata-generator-${Environment}        
         Timeout: 120
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 
-  CreateDaaSRawMetadataGenPolicy:
+  CreateDaaSIngMetadataGenPolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
       Roles:
-        - !GetAtt CreateDaaSRawMetadataGenLambda.Outputs.LambdaRole
-      PolicyName: plc-inline-lmd-raw-metadata-gen
+        - !GetAtt CreateDaaSIngMetadataGenLambda.Outputs.LambdaRole
+      PolicyName: plc-inline-lmd-ingest-metadata-gen
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -42,10 +42,4 @@ Resources:
             Effect: "Allow"
             Action: "sts:AssumeRole"
             Resource: 
-              Fn::Sub: "arn:aws:iam::*:role/${Entity}-rle-glue-controller-admin-${Environment}"
-          -
-            Sid: "assumeDaaSMetadataGenRole"
-            Effect: "Allow"
-            Action: "sts:AssumeRole"
-            Resource: 
-              Fn::Sub: "arn:aws:iam::*:role/rle-${Entity}-lmd-metadata-generator-${Environment}"
+              Fn::Sub: "arn:aws:iam::*:role/*-rle-ingest-glue-controller-admin-${Environment}"

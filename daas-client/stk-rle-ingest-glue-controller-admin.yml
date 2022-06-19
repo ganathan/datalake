@@ -24,8 +24,8 @@ Resources:
     Properties:
       Parameters:
         Environment: !Ref Environment
-        Name: !Sub ${Entity}-rle-glue-controller-admin-${Environment}
-        AWSTrustPrincipal: !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-raw-metadata-generato-${Environment}
+        Name: !Sub ${Entity}-rle-ingest-glue-controller-admin-${Environment}
+        AWSTrustPrincipal: !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-ingest-metadata-generator-${Environment}
         Description: !Sub Glue controller Role to provision crawler and manage partitions for DaaS Client deployed in ${Environment}
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/template/cft-rle-common-template.yml
       TimeoutInMinutes: '60'
@@ -45,10 +45,19 @@ Resources:
               - 'glue:*'
             Resource:
               - '*'
+          - Sid: 'allowCloudWatchAccess'
+            Effect: 'Allow'
+            Action:
+              - 'cloudwatch:PutMetricData'
+            Resource:
+              - '*'              
           - Sid: 'allowLogAccess'
             Effect: 'Allow'
             Action:
               - 'logs:PutLogEvents'
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'           
             Resource:
               - '*'              
           - Sid: 'allowEventAccess'

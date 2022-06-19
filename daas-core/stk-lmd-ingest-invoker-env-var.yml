@@ -11,7 +11,7 @@ Environment:
     ENV_VAR_EVNT_CONVR_STEP_FUNC_ARN:
       Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-event-converter-${Environment}"
     ENV_VAR_EVNT_CONTROL_STEP_FUNC_ARN:
-      Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-event-controller-${Environment}"
+      Fn::Sub: "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${Entity}-stpfn-ingest-event-controller-${Environment}"
     ENV_VAR_SETUP_BUCKET:
       Fn::Sub: "${Entity}-s3-${AWS::Region}-daas-core-setup-bucket-${Environment}"
     ENV_VAR_SETUP_CONFIG_FILE: ".daas-setup/setup.csv"

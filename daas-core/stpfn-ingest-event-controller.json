@@ -28,7 +28,7 @@
         "OutputPath": "$.Payload",
         "Parameters": {
           "Payload.$": "$",
-          "FunctionName": "${LambdaArnString}:${Entity}-lmd-lf-access-controller-${Environment}"
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-ingest-lf-fgac-${Environment}"
         },
         "Retry": [
           {
@@ -37,8 +37,8 @@
               "Lambda.AWSLambdaException",
               "Lambda.SdkClientException"
             ],
-            "IntervalSeconds": 2,
-            "MaxAttempts": 6,
+            "IntervalSeconds": 5,
+            "MaxAttempts": 2,
             "BackoffRate": 2
           }
         ],
@@ -50,7 +50,7 @@
         "OutputPath": "$.Payload",
         "Parameters": {
           "Payload.$": "$",
-          "FunctionName": "${LambdaArnString}:${Entity}-lmd-raw-metadata-generator-${Environment}"
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-ingest-metadata-generator-${Environment}"
         },
         "Retry": [
           {
@@ -59,8 +59,8 @@
               "Lambda.AWSLambdaException",
               "Lambda.SdkClientException"
             ],
-            "IntervalSeconds": 2,
-            "MaxAttempts": 6,
+            "IntervalSeconds": 5,
+            "MaxAttempts": 2,
             "BackoffRate": 2
           }
         ],
@@ -72,7 +72,7 @@
         "OutputPath": "$.Payload",
         "Parameters": {
           "Payload.$": "$",
-          "FunctionName": "${LambdaArnString}:${Entity}-lmd-raw-metadata-purger-${Environment}"
+          "FunctionName": "${LambdaArnString}:${Entity}-lmd-ingest-metadata-purger-${Environment}"
         },
         "Retry": [
           {
@@ -81,8 +81,8 @@
               "Lambda.AWSLambdaException",
               "Lambda.SdkClientException"
             ],
-            "IntervalSeconds": 2,
-            "MaxAttempts": 6,
+            "IntervalSeconds": 5,
+            "MaxAttempts": 2,
             "BackoffRate": 2
           }
         ],

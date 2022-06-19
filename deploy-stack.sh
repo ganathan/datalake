@@ -121,7 +121,6 @@ then
         fi
     elif [ "$serviceType" == "ec2" ]
     then
-        echo 'inside ec2 logic...'
         # check if key pair exists, else create one.
         echo $ec2KeyPairName
         keyPairStatus=$(aws ec2 wait key-pair-exists --region "${region}" --key-names "${ec2KeyPairName}" 2>&1)

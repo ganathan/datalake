@@ -21,11 +21,11 @@ Resources:
     Properties :
       Parameters:
         Environment: !Ref Environment
-        Name: !Sub ${Entity}-lmd-lf-access-controller-${Environment}
+        Name: !Sub ${Entity}-lmd-ingest-lf-fgac-${Environment}
         Description: !Sub Datalake as a Service Lake Formation Access Controller deployed in ${Environment}
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
-        LambdaEnvVarFileName: !Sub stacks/stk-lmd-lf-access-controller/stk-lmd-lf-access-controller-env-var.yml
-        HandlerName: lmd-lf-access-controller.lambda_handler
+        LambdaEnvVarFileName: !Sub stacks/stk-lmd-ingest-lf-fgac/stk-lmd-ingest-lf-fgac-env-var.yml
+        HandlerName: lmd-ingest-lf-fgac.lambda_handler
         MemorySize: 128
         Timeout: 120
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
@@ -36,7 +36,7 @@ Resources:
     Properties:
       Roles:
         - !GetAtt CreateDaaSLFAccessControllLambda.Outputs.LambdaRole
-      PolicyName: plc-inline-lf-access-controller
+      PolicyName: plc-inline-lf-fgac
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -44,4 +44,4 @@ Resources:
             Sid: "allowDaaSClientLFAssumeRole"
             Effect: "Allow"
             Action: "sts:AssumeRole"
-            Resource: !Sub "arn:aws:iam::${AccountId}:role/${Entity}-rle-lf-access-controller-admin-${Environment}"
+            Resource: !Sub "arn:aws:iam::${AccountId}:role/${Entity}-rle-ingest-lf-fgac-admin-${Environment}"

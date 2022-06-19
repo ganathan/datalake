@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Step Function state machine for event controller in data lake as a service - core (DaaS - Client)
+Description: Step Function state machine for ingest event controller in data lake as a service - core
 
 Parameters:
   Entity:
@@ -16,11 +16,11 @@ Resources:
     Properties:
       Parameters:
         Bucket: !Sub '${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}'
-        Description: Step Function state machine for event controller in Daas Client      
+        Description: Step Function state machine for event controller in Daas Core      
         Entity: !Ref Entity
         Environment: !Ref Environment
-        Key: !Sub stpfn/scripts/stacks/stk-stpfn-event-controller/stpfn-event-controller.json
-        Name: !Sub '${Entity}-stpfn-event-controller-${Environment}'
-        StepFnVarFileName: !Sub stacks/stk-stpfn-event-controller/stk-stpfn-event-controller-var.yml
+        Key: !Sub stpfn/scripts/stacks/stk-stpfn-ingest-event-controller/stpfn-ingest-event-controller.json
+        Name: !Sub '${Entity}-stpfn-ingest-event-controller-${Environment}'
+        StepFnVarFileName: !Sub stacks/stk-stpfn-ingest-event-controller/stk-stpfn-ingest-event-controller-var.yml
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/stpfn/scripts/template/cft-stpfn-common-template.yml
       TimeoutInMinutes: '60'

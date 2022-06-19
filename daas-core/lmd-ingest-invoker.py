@@ -72,10 +72,7 @@ def invoke_controller_stepfunction(client_account_id, glue_db_name, params, cont
         print(response)
         return response['Payload'].read()
     except Exception as e:
-        print('INSIDE EXCEPTION ')
-        print(e)
-        
-        # raise ValueError(f"Failed while invoking step function {state_machine_arn}  {params} {e}")
+        raise Exception(f'Failed while invoking step function {state_machine_arn}  {params} {e}')
 
 # ---------------------------------------------------------------------
 # Invoke step function to converter the object
@@ -84,6 +81,7 @@ def invoke_converter_stepfunction(source_bucket, source_key, domain_name, object
     try:
         params = {
             'source_bucket': source_bucket,
+            'region': region,
             'source_key': source_key,
             'domain_name': domain_name,
             'object_name': object_name,
@@ -96,8 +94,7 @@ def invoke_converter_stepfunction(source_bucket, source_key, domain_name, object
         )
         return response['Payload'].read()
     except Exception as e:
-        print(e)
-        # raise ValueError(f"Failed while invoking step function {state_machine_arn}  {params} {e}")
+        raise Exception(f"Failed while invoking step function {state_machine_arn}  {params} {e}")
     
 
 # ---------------------------------------------------------------------
@@ -145,15 +142,16 @@ def get_config_details(source_bucket):
             (replicate, db_name, db_schema) = get_replication_detail(data_dict) 
             glue_db_name = get_client_glue_database_name(data_dict)
         except Exception as e:
-            print("Config file not defined! Using system defaults!")
+            print(f"Config file {daas_config} not defined! Using system defaults!")
         (client_account_id, client_entity, client_database_name) = get_client_details(source_bucket)
+        upd_client_entity = client_entity.replace('_','').replace('-','')
         if not glue_db_name:
-            glue_db_name=client_database_name  + client_entity + 'raw'
+            glue_db_name=client_database_name + '_' + upd_client_entity + '_' + 'raw'
         else:
-            glue_db_name=glue_db_name + client_entity + 'raw'
+            glue_db_name=glue_db_name + '_' + upd_client_entity + '_' + 'raw'
         return (client_account_id, client_entity, replicate, db_name, db_schema, glue_db_name)
     except Exception as e:
-        print(e)
+        raise Exception('Unable to get config details!  {e}')
 
 
 # ---------------------------------------------------------------------
@@ -184,48 +182,52 @@ def get_object_details(source_bucket, source_key):
         is_access_control = object_name.find('access-config.txt')
         return (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, is_ignore_object, is_access_control)
     except Exception as e:
-        print(e)
+        raise Exception(e)
 
 # ---------------------------------------------------------------------
 # Process object to invoke step function
 # ---------------------------------------------------------------------
-def process_object_metadata(source_bucket, source_key, region, domain_name,controller):          
-    partition_values=[]
-    source_name = source_key.split('/')[0:1][0]  # get the first prefix and assign it as the source name
-    partitions = source_key.split('/')[2:-1]  # Remove source name, domain name in the front and the key at the end
-    for key in partitions:
-        value = key.split('=')[1]
-        if value:
-            partition_values.append(value)
-        else:
-            partition_values.append(key)
-    path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
-    (client_account_id, client_entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
-    crawler_name = client_entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler' + environment
-    target_gluejb_lambda_arn = 'arn:aws:lambda:' + region + ':' + client_account_id + ':function:' + client_entity + '-lmd-glujb-sync-generator-' + environment
-    glue_admin_role_name= client_entity + '-rle-glue-controller-admin-' + environment
-    table_name = domain_name.replace('-','_')
-    data={}
-    data['account_id'] = client_account_id
-    data['glue_db_name'] = glue_db_name
-    data['glue_admin_role_name'] = glue_admin_role_name
-    data['gluejb_lambda_arn'] = target_gluejb_lambda_arn
-    data['src_bucket_name'] = source_bucket
-    data['src_source_name'] = source_name    
-    data['source_file_path'] = path
-    data['domain_name'] = domain_name
-    data['crawler_name'] = crawler_name
-    data['table_name'] = table_name
-    data['partitions'] = partitions
-    data['partition_values'] = partition_values
-    data['replicate'] = replicate
-    data['db_name'] = db_name
-    data['db_schema'] = db_schema    
-    params=json.dumps(data)
-    
-    resp = invoke_controller_stepfunction(client_account_id, glue_db_name, params, controller, state_machine_arn=event_controller_stepfn_arn)
-    return resp
-
+def process_object_metadata(source_bucket, source_key, region, domain_name,controller): 
+    try:         
+        partition_values=[]
+        source_name = source_key.split('/')[0:1][0]  # get the first prefix and assign it as the source name
+        partitions = source_key.split('/')[2:-1]  # Remove source name, domain name in the front and the key at the end
+        for key in partitions:
+            value = key.split('=')[1]
+            if value:
+                partition_values.append(value)
+            else:
+                partition_values.append(key)
+        path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
+        (client_account_id, client_entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
+        crawler_name = client_entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler' + environment
+        target_gluejb_lambda_arn = 'arn:aws:lambda:' + region + ':' + client_account_id + ':function:' + client_entity + '-lmd-glujb-sync-generator-' + environment
+        glue_admin_role_name= client_entity + '-rle-ingest-glue-controller-admin-' + environment
+        table_name = domain_name.replace('-','_')
+        data={}
+        data['account_id'] = client_account_id
+        data['region'] = region
+        data['glue_db_name'] = glue_db_name
+        data['glue_admin_role_name'] = glue_admin_role_name
+        data['gluejb_lambda_arn'] = target_gluejb_lambda_arn
+        data['src_bucket_name'] = source_bucket
+        data['src_source_name'] = source_name    
+        data['source_file_path'] = path
+        data['domain_name'] = domain_name
+        data['crawler_name'] = crawler_name
+        data['table_name'] = table_name
+        data['partitions'] = partitions
+        data['partition_values'] = partition_values
+        data['replicate'] = replicate
+        data['db_name'] = db_name
+        data['db_schema'] = db_schema    
+        params=json.dumps(data)
+        
+        resp = invoke_controller_stepfunction(client_account_id, glue_db_name, params, controller, state_machine_arn=event_controller_stepfn_arn)
+        return resp
+    except Exception as e:
+        raise Exception(e)
+        
 # -------------------------------------------------
 # Main lambda function
 # -------------------------------------------------
