@@ -46,6 +46,11 @@ then
         # Copy the environment variable to the common deploy folder
         aws s3 cp $current_path/$templateName-env-var.yml \
           s3://$commonS3Bucket/$serviceType/scripts/template/$templateName-env-var.yml    
+    elif [ "$serviceType" == "rle" ]
+    then
+        # Copy the trust policy to the common deploy folder
+        aws s3 cp $current_path/$templateName-trust.yml \
+          s3://$commonS3Bucket/$serviceType/scripts/template/$templateName-trust.yml           
     elif [ "$serviceType" == "stpfn" ]
     then
         # Copy the variable to the common deploy folder

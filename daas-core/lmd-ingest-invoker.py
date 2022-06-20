@@ -200,7 +200,7 @@ def process_object_metadata(source_bucket, source_key, region, domain_name,contr
                 partition_values.append(key)
         path = 's3://' + source_bucket + '/' + source_name + '/' +  domain_name + '/'
         (client_account_id, client_entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
-        crawler_name = client_entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler' + environment
+        crawler_name = client_entity + '-' + source_name + '-' + domain_name + '-' + 'raw-crawler' + '-' + environment
         target_gluejb_lambda_arn = 'arn:aws:lambda:' + region + ':' + client_account_id + ':function:' + client_entity + '-lmd-glujb-sync-generator-' + environment
         glue_admin_role_name= client_entity + '-rle-ingest-glue-controller-admin-' + environment
         table_name = domain_name.replace('-','_')

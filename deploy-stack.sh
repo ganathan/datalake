@@ -60,6 +60,14 @@ then
         # Copy layer zip file to common stack folder
         aws s3 cp $app.zip \
             s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$app.zip
+    elif [ "$serviceType" == "rle" ]
+    then
+        # Copy the trust policy file to the common stack folder only when it exists
+        file=$stackName-trust.yml
+        if [[ -f "$file" ]]; then
+            aws s3 cp $file  \
+                s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName-trust.yml        
+        fi
     elif [ "$serviceType" == "stpfn" ]
     then
         # Copy the var file to the common stack folder only when it exists

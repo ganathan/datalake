@@ -66,6 +66,7 @@ then
     # NOTE: to deploy the client s3 bucket and role use syntax:
     # sh deploy-daas-client.sh <entity> <client account id> <region> <environment> <core account id> <core entity>
     deploy_stack rle ingest-glue-controller-admin $daasCoreAccountId $daasCoreEntity
+    # deploy_stack rle test $daasCoreAccountId $daasCoreEntity
     # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
     # deploy_stack s3 lf-raw-sample-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
     # sleep 90

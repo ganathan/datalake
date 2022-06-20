@@ -5,14 +5,18 @@ Parameters:
   Application:
     Type: String
     Default: daas
-  AWSTrustPrincipal:
-    Type: String    
   BusinessUnit:
     Type: String
     Default: private
   CostCenter:
     Type: String
     Default: 55100
+  DaasCoreAccountId:
+    Type: String
+    Default: false
+  DaasCoreEntity:
+    Type: String
+    Default: false
   Description:
     Type: String    
   Entity:
@@ -25,28 +29,35 @@ Parameters:
     Type: String
   Project:
     Type: String
-    Default: daas    
+    Default: daas
+  Service:
+    Type: String   
   Support:
     Type: String
     Default: nathan.ganesh@gmail.com
   TagsVarFileName:
     Type: String
-    Default: template/cft-tag-common-var.yml    
+    Default: template/cft-tag-common-var.yml
+  TrustPolicyFileName:
+    Type: String
+    Default: template/cft-rle-common-trust.yml  
 
 Resources:
   CreateRole:
     Type: AWS::IAM::Role
     Properties :
-      RoleName: !Sub ${Name}
-      Description: !Sub ${Description}      
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
         - Effect: Allow
-          Principal:
-            AWS:
-            - !Sub ${AWSTrustPrincipal}
-          Action: sts:AssumeRole
+          Action: sts:AssumeRole        
+          Fn::Transform:
+            Name: AWS::Include
+            Parameters:
+              Location:
+                Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/${TrustPolicyFileName}'
+      Description: !Sub ${Description}  
+      RoleName: !Sub ${Name}
       Tags:
         - Key: Application 
           Value:
