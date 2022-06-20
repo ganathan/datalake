@@ -23,10 +23,13 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
+        DaasCoreAccountId: !Ref DaasCoreAccountId
+        DaasCoreEntity: !Ref DaasCoreEntity
+        Description: !Sub Lake Formation access controller Role to provision access controls on tables for DaaS Client deployed in ${Environment}
+        Entity: !Ref Entity
         Environment: !Ref Environment
         Name: !Sub ${Entity}-rle-ingest-lf-fgac-admin-${Environment}
-        AWSTrustPrincipal: !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-ingest-lf-fgac-${Environment}
-        Description: !Sub Lake Formation access controller Role to provision access controls on tables for DaaS Client deployed in ${Environment}
+        Service: lakeformation.amazonaws.com
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/template/cft-rle-common-template.yml
       TimeoutInMinutes: '60'
 

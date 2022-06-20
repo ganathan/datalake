@@ -1,0 +1,8 @@
+Principal:
+  AWS:
+    - Fn::Sub: "arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-ingest-lf-fgac-${Environment}"
+  Service: 
+    - s3.amazonaws.com
+    - glue.amazonaws.com
+    - lakeformation.amazonaws.com
+
