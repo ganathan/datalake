@@ -180,7 +180,9 @@ def get_object_details(source_bucket, source_key):
         is_dot_folder_object = short_path.rfind('.',0)
         is_ignore_object = short_path.find('-daas-gen-raw')
         is_access_control = object_name.find('access-config.txt')
-        return (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, is_ignore_object, is_access_control)
+        is_cleanup = object_name.find('cleanup.txt')
+        return (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, \
+                    is_ignore_object, is_access_control, is_cleanup)
     except Exception as e:
         raise Exception(e)
 
@@ -206,7 +208,6 @@ def process_object_metadata(source_bucket, source_key, region, domain_name,contr
         table_name = domain_name.replace('-','_')
         data={}
         data['account_id'] = client_account_id
-        data['region'] = region
         data['glue_db_name'] = glue_db_name
         data['glue_admin_role_name'] = glue_admin_role_name
         data['gluejb_lambda_arn'] = target_gluejb_lambda_arn
@@ -223,7 +224,7 @@ def process_object_metadata(source_bucket, source_key, region, domain_name,contr
         data['db_schema'] = db_schema    
         params=json.dumps(data)
         
-        resp = invoke_controller_stepfunction(client_account_id, glue_db_name, params, controller, state_machine_arn=event_controller_stepfn_arn)
+        resp = invoke_controller_stepfunction(client_account_id, glue_db_name, region, params, controller, state_machine_arn=event_controller_stepfn_arn)
         return resp
     except Exception as e:
         raise Exception(e)
@@ -240,13 +241,17 @@ def lambda_handler(event, context):
                 source_bucket = record['s3']['bucket']['name']
                 source_key = urllib.parse.unquote_plus(record['s3']['object']['key'], encoding='utf-8')
                 region = record['awsRegion']
-                (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, is_ignore_object, is_access_control) = get_object_details(source_bucket, source_key)
-                if is_dot_folder_object != -1 and is_access_control != -1:
-                    controller = 'access-control'
+                (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, is_ignore_object, \
+                    is_access_control, is_cleanup) = get_object_details(source_bucket, source_key)
+                if is_dot_folder_object != -1 
+                    if is_access_control != -1:
+                        controller = 'access-control'
+                    elif is_cleanup != -1:
+                        controller = 'metadata-purger'
                     (client_account_id, client_entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
                     fileObj = s3_client.get_object(Bucket= source_bucket, Key=source_key)
                     params = fileObj['Body'].read().decode('utf-8').splitlines()
-                    resp = invoke_controller_stepfunction(client_account_id, glue_db_name, params, controller, state_machine_arn=event_controller_stepfn_arn)
+                    resp = invoke_controller_stepfunction(client_account_id, glue_db_name, region, params, controller, state_machine_arn=event_controller_stepfn_arn)
                 elif is_object_file and object_name and is_dot_folder_object == -1 and is_ignore_object == -1:
                     extension = object_name.split('.')[-1].lower() # get the file extension.
                     if extension == 'xml' or extension == 'xls' or extension == 'xlsx' or extension == 'md':

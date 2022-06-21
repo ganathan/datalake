@@ -73,20 +73,23 @@ def delete_cloudwatch_event(glue_client, rule_name):
 # -------------------------------------------------
 # get the glue daas client
 # -------------------------------------------------
-def get_glue_client(target_glue_service_role_arn):
-    sts_connection = boto3.client('sts')
-    print('assuming role..... ' + target_glue_service_role_arn)
-    
-    daas_client = sts_connection.assume_role(
-        RoleArn=target_glue_service_role_arn,
-        RoleSessionName="daas-core"
-    )
-    ACCESS_KEY = daas_client['Credentials']['AccessKeyId']
-    SECRET_KEY = daas_client['Credentials']['SecretAccessKey']
-    SESSION_TOKEN = daas_client['Credentials']['SessionToken']
-    glue_client = boto3.client('glue', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, aws_session_token=SESSION_TOKEN)
-    print('got the glue_client')
-    return glue_client
+def get_glue_client(region,target_glue_service_role_arn):
+    try:
+        url='https://sts.' + region + '.amazonaws.com/'
+        sts_connection = boto3.client('sts', region_name=region, endpoint_url=url)
+        
+        daas_client = sts_connection.assume_role(
+            RoleArn=target_glue_service_role_arn,
+            RoleSessionName="daas-core"
+        )
+        ACCESS_KEY = daas_client['Credentials']['AccessKeyId']
+        SECRET_KEY = daas_client['Credentials']['SecretAccessKey']
+        SESSION_TOKEN = daas_client['Credentials']['SessionToken']
+        glue_client = boto3.client('glue', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, aws_session_token=SESSION_TOKEN)
+        return glue_client
+    except Exception as e:
+        raise Exception(f'Unable to assume role {target_glue_service_role_arn}! {e}')
+
     
     
 # -------------------------------------------------
@@ -95,6 +98,8 @@ def get_glue_client(target_glue_service_role_arn):
 def lambda_handler(event, context):
     print(event)
     try:
+        account_id = event['account_id']
+        region = event['region']
         params = json.loads(event['params'])
         client_account_id = params['account_id']
         glue_db_name = params['glue_db_name']

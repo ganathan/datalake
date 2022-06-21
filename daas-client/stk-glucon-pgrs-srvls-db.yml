@@ -20,8 +20,8 @@ Resources:
         Description: !Sub Glue Connection for Aurora Postgress Serverless DB in ${Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
-        Name: !Sub ${Entity}-glucon-daas-client-pgsrvls
-        SecretManagerName: !Sub '${Entity}-smgr-daas-client-pgsrvls-${Environment}'
+        Name: !Sub ${Entity}-glucon-pgrs-srvls-db
+        SecretManagerName: !Sub '${Entity}-smgr-pgrs-srvls-db-${Environment}'
         SecurityGroup:
           !ImportValue
             'Fn::Sub': '${Entity}-sgrp-rds-pgrs-default-${Environment}'

@@ -1,23 +1,24 @@
 #!/bin/bash
 # set variables
-entity=$1
-accountId=$2
-region=$3
-environment=$4
-serviceType=$5
-app=$6
-lambdaVersion=$7
-secretString=$7
-s3QueueArn=$7
-ec2KeyPairName=$7
-daasCoreAccountId=$8
-daasCoreEntity=$9
+layer=$1
+entity=$2
+accountId=$3
+region=$4
+environment=$5
+serviceType=$6
+app=$7
+lambdaVersion=$8
+secretString=$8
+s3QueueArn=$8
+ec2KeyPairName=$8
+daasCoreAccountId=$9
+daasCoreEntity=$10
 stackName=stk-$serviceType-$app
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 type=update
 
 # Check if parameters are defined
-if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ]  && [ ! -z "$serviceType" ] && [ ! -z "$app" ] 
+if [ ! -z "$layer" ] && [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ]  && [ ! -z "$serviceType" ] && [ ! -z "$app" ] 
 then
 
     # Check if common bucket exists for the given service type
@@ -38,19 +39,22 @@ then
             lambdaVersion=100
         fi
 
+        echo 'inside lambda '
+        echo $lambdaVersion
+        
         # First delete the existing zip file. this ensures always a fresh zip file is created and deployed!
-        rm $serviceType-$app-$lambdaVersion.zip
+        rm $layer/$serviceType-$app-$lambdaVersion.zip
 
         # Create a new zip file with the given version.
-        zip -r -X $serviceType-$app-$lambdaVersion.zip $serviceType-$app.py
+        zip -r -X $layer/$serviceType-$app-$lambdaVersion.zip $layer/$serviceType-$app.py
         sleep 5
 
         # Copy zip file to common stack folder
-        aws s3 cp $serviceType-$app-$lambdaVersion.zip \
+        aws s3 cp $layer/$serviceType-$app-$lambdaVersion.zip \
             s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$serviceType-$app-$lambdaVersion.zip
 
         # Copy the env var file to the common stack folder only when it exists
-        file=$stackName-env-var.yml
+        file=$layer/$stackName-env-var.yml
         if [[ -f "$file" ]]; then
             aws s3 cp $file  \
                 s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName-env-var.yml
@@ -58,12 +62,12 @@ then
     elif [ "$serviceType" == "lmdlyr" ]
     then
         # Copy layer zip file to common stack folder
-        aws s3 cp $app.zip \
+        aws s3 cp $layer/$app.zip \
             s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$app.zip
     elif [ "$serviceType" == "rle" ]
     then
         # Copy the trust policy file to the common stack folder only when it exists
-        file=$stackName-trust.yml
+        file=$layer/$stackName-trust.yml
         if [[ -f "$file" ]]; then
             aws s3 cp $file  \
                 s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName-trust.yml        
@@ -71,19 +75,19 @@ then
     elif [ "$serviceType" == "stpfn" ]
     then
         # Copy the var file to the common stack folder only when it exists
-        file=$stackName-var.yml
+        file=$layer/$stackName-var.yml
         if [[ -f "$file" ]]; then
             aws s3 cp $file  \
                 s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName-var.yml
         fi
 
         #Copy the statemachine json file to common stack folder 
-        aws s3 cp $serviceType-$app.json \
+        aws s3 cp $layer/$serviceType-$app.json \
             s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$serviceType-$app.json
     fi
 
     # Copy the s3 bucket to the common deploy folder
-    aws s3 cp $stackName.yml \
+    aws s3 cp $layer/$stackName.yml \
        s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml
        
 

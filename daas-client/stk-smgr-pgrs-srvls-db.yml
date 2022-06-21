@@ -24,7 +24,7 @@ Resources:
         Entity: !Ref Entity
         Environment: !Ref Environment
         Description: !Sub Aurora Postgress secrets manaer for ${Entity} daas client 
-        Name: !Sub ${Entity}-smgr-daas-client-pgsrvls
+        Name: !Sub ${Entity}-smgr-pgrs-srvls-db
         SecretString: !Ref SecretString
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/smgr/scripts/template/cft-smgr-common-template.yml
       TimeoutInMinutes: '60'

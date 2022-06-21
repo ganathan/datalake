@@ -180,8 +180,8 @@ def lambda_handler(event, context):
     print(event)
     try:
         account_id = event['account_id']
-        params = json.loads(event['params'])
-        region=params['region']        
+        region = event['region']   
+        params = json.loads(event['params'])     
         glue_db_name = params['glue_db_name']
         glue_admin_role_name = params['glue_admin_role_name']
         crawler_name = params['crawler_name']

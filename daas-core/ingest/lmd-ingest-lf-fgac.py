@@ -78,20 +78,26 @@ def parse(command, account_id):
     role_arn = get_role_arn(account_id, index, command_components)
     return (root_command, command_type, permission, table_name, cols, row_filters.strip(), role_arn)
 
-# ------------------------------------------------------------
-# get the lakeformation daas client
-# ------------------------------------------------------------
-def get_lakeformation_client(target_lf_service_role_arn):
-    sts_connection = boto3.client('sts')
-    daas_client = sts_connection.assume_role(
-        RoleArn=target_lf_service_role_arn,
-        RoleSessionName="daas-core"
-    )
-    ACCESS_KEY = daas_client['Credentials']['AccessKeyId']
-    SECRET_KEY = daas_client['Credentials']['SecretAccessKey']
-    SESSION_TOKEN = daas_client['Credentials']['SessionToken']
-    lf_client = boto3.client('lakeformation', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, aws_session_token=SESSION_TOKEN)  
-    return lf_client
+
+# -------------------------------------------------
+# get the glue daas client
+# -------------------------------------------------
+def get_lakeformation_client(region,target_lf_service_role_arn):
+    try:
+        url='https://sts.' + region + '.amazonaws.com/'
+        sts_connection = boto3.client('sts', region_name=region, endpoint_url=url)
+        
+        daas_client = sts_connection.assume_role(
+            RoleArn=target_glue_service_role_arn,
+            RoleSessionName="daas-core"
+        )
+        ACCESS_KEY = daas_client['Credentials']['AccessKeyId']
+        SECRET_KEY = daas_client['Credentials']['SecretAccessKey']
+        SESSION_TOKEN = daas_client['Credentials']['SessionToken']
+        lf_client = boto3.client('glue', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, aws_session_token=SESSION_TOKEN)
+        return lf_client
+    except Exception as e:
+        raise Exception(f'Unable to assume role {target_glue_service_role_arn}! {e}')
 
 # ------------------------------------------------------------
 # get the resource mapped either with rows or columns or none
@@ -128,11 +134,12 @@ def lambda_handler(event, context):
         print(event)
         database_name = event['database_name']
         account_id = event['account_id']
+        region = event['region']
         params = event['params']
         responses = []
         for command in params:
             target_lf_service_role_arn='arn:aws:iam::' + account_id + ':role/' + os.environ["ENV_VAR_LF_SERVICE_ROLE"]
-            lf_client = get_lakeformation_client(target_lf_service_role_arn)
+            lf_client = get_lakeformation_client(region, target_lf_service_role_arn)
             (root_command, command_type, permission, table_name, cols, row_filters, role_arn) = parse(command, account_id)
             revoke_iam_principals(lf_client, account_id, database_name, table_name)
             principal = { 'DataLakePrincipalIdentifier' : role_arn }
