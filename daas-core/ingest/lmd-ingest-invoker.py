@@ -213,6 +213,9 @@ def get_object_details(source_bucket, source_key):
     except Exception as e:
         raise Exception(e)
 
+# ---------------------------------------------------------------------
+# Package the parameters to send it to step function as input
+# ---------------------------------------------------------------------
 def package_parameters(source_bucket, source_key, region, domain_name, commands):
     try:         
         partition_values=[]
@@ -269,18 +272,22 @@ def lambda_handler(event, context):
                     
                 if is_ignore_object:
                     resp= source_bucket +  '/' + source_key + ' is not a valid file.. processing ignored!'
-                    logger(f'ignoring the object {source_key} since it is not a valid file to generate metadata')
+                    logger(f'ignoring the object {source_key} since it is not a valid file to generate metadata...')
                 elif is_preprocessor:
                     resp = invoke_converter_stepfunction(source_bucket, source_key, domain_name, object_name, extension, state_machine_arn=event_converter_stepfn_arn)
+                    logger(f'preprocessor invoked! {source_key} is being converted...')
                 else:
                     if is_dot_folder_object:                    
                         fileObj = s3_client.get_object(Bucket= source_bucket, Key=source_key)
                         commands = fileObj['Body'].read().decode('utf-8').splitlines()
+                        logger(f'since the object is a configration {source_key}, commands are being packaged for processing....')
                     else:
                         commands='none'
+                        logger(f'{source_key} is valid, routing to step funciton to generate metadata ...')
                     (client_account_id, glue_db_name, region, event_vars) = package_parameters(source_bucket, source_key, region, domain_name, commands)
                     params=json.dumps(event_vars)
                     resp = invoke_controller_stepfunction(client_account_id, glue_db_name, region, params, controller=process_type, state_machine_arn=event_controller_stepfn_arn)
+                    logger(f'controller step function invoked!')
             return {
                 'body': resp,
                 'statusCode': 200
