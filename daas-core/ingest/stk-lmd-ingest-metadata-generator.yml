@@ -20,7 +20,7 @@ Resources:
         Description: !Sub Datalake as a Service Core ingest metadata generator deployed in ${Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
-        HandlerName: lmd-ingest-metadata-generator.lambda_handler        
+        HandlerName: ingest/lmd-ingest-metadata-generator.lambda_handler        
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         MemorySize: 128
         Name: !Sub ${Entity}-lmd-ingest-metadata-generator-${Environment}        

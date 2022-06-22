@@ -5,8 +5,11 @@ import urllib.parse
 import boto3
 import botocore
 import csv
+import logging
 from io import StringIO
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # --------------------------------------------------
 # Initializes global variables
@@ -55,11 +58,12 @@ def get_replication_detail(data_dict):
 # -------------------------------------------------------------------
 # Invoke step function to contol the services deployed on the object
 # --------------------------------------------------------------------
-def invoke_controller_stepfunction(client_account_id, glue_db_name, params, controller, state_machine_arn):
+def invoke_controller_stepfunction(client_account_id, glue_db_name, region, params, controller, state_machine_arn):
     try:
         params = {
             'account_id': client_account_id,
             'database_name': glue_db_name,
+            'region': region,
             'params': params,
             'controller': controller,
             'state_machine_arn': state_machine_arn
@@ -69,8 +73,7 @@ def invoke_controller_stepfunction(client_account_id, glue_db_name, params, cont
             stateMachineArn=state_machine_arn,
             input= json.dumps(params)
         )
-        print(response)
-        return response['Payload'].read()
+        return f'Step function {state_machine_arn} started!'
     except Exception as e:
         raise Exception(f'Failed while invoking step function {state_machine_arn}  {params} {e}')
 
@@ -92,7 +95,7 @@ def invoke_converter_stepfunction(source_bucket, source_key, domain_name, object
             stateMachineArn=state_machine_arn,
             input= json.dumps(params)
         )
-        return response['Payload'].read()
+        return f'Step function {state_machine_arn} started!'
     except Exception as e:
         raise Exception(f"Failed while invoking step function {state_machine_arn}  {params} {e}")
     
@@ -142,7 +145,7 @@ def get_config_details(source_bucket):
             (replicate, db_name, db_schema) = get_replication_detail(data_dict) 
             glue_db_name = get_client_glue_database_name(data_dict)
         except Exception as e:
-            print(f"Config file {daas_config} not defined! Using system defaults!")
+            logger.info(f"Config file {daas_config} not defined! Using system defaults!")
         (client_account_id, client_entity, client_database_name) = get_client_details(source_bucket)
         upd_client_entity = client_entity.replace('_','').replace('-','')
         if not glue_db_name:
@@ -151,7 +154,7 @@ def get_config_details(source_bucket):
             glue_db_name=glue_db_name + '_' + upd_client_entity + '_' + 'raw'
         return (client_account_id, client_entity, replicate, db_name, db_schema, glue_db_name)
     except Exception as e:
-        raise Exception('Unable to get config details!  {e}')
+        raise Exception(f'Unable to get config details!  {e}')
 
 
 # ---------------------------------------------------------------------
@@ -163,7 +166,7 @@ def is_file(source_bucket, key, prefix):
             s3_client.head_object(Bucket= source_bucket, Key=key)
             return True
     except Exception as e:
-        print(f'key {key} in bucket {source_bucket} is not a valid file!')
+        logger.info(f'key {key} in bucket {source_bucket} is not a valid file!')
         return False
 
 
@@ -172,24 +175,45 @@ def is_file(source_bucket, key, prefix):
 # ---------------------------------------------------------------------
 def get_object_details(source_bucket, source_key):
     try:
-        prefix=source_key.split('/')
-        is_object_file = is_file(source_bucket, source_key, prefix)        
         domain_name = source_key.split('/')[0:2][1]  # get the second prefix and assign it as the domain name
         object_name = source_key.split('/')[-1] # get the file name
         short_path = source_key[0:source_key.rfind('/',0)] # get upto the file path
-        is_dot_folder_object = short_path.rfind('.',0)
-        is_ignore_object = short_path.find('-daas-gen-raw')
-        is_access_control = object_name.find('access-config.txt')
-        is_cleanup = object_name.find('cleanup.txt')
-        return (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, \
-                    is_ignore_object, is_access_control, is_cleanup)
+        prefix=source_key.split('/')      
+        
+        is_ignore_object =  (False if short_path.find('-daas-gen-raw') == -1 else True)
+        is_dot_folder_object = (False if short_path.rfind('.',0) == -1 else True)
+
+        if is_ignore_object:
+            is_preprocessor = False
+            process_type = 'none'
+        elif is_dot_folder_object:
+            if (False if object_name.find('access-config.txt') == -1 else True):
+                is_preprocessor = False
+                process_type = 'access-control'
+            elif (False if object_name.find('cleanup.txt') == -1 else True):
+                is_preprocessor = False
+                process_type = 'metadata-purger'
+            else:                                   # could be a folder or subfolders can be ignored
+                is_ignore_object = True
+                is_preprocessor = False
+                process_type = 'none'
+        elif is_file(source_bucket, source_key, prefix) and object_name:
+            extension = object_name.split('.')[-1].lower() # get the file extension.
+            if extension == 'xml' or extension == 'xls' or extension == 'xlsx' or extension == 'md':
+                is_preprocessor = True
+                process_type = 'convert'
+            else:
+                process_type = 'metadata-generate'
+                is_preprocessor = False
+        else:                                      # could be a folder or subfolder (patition keys)
+            is_ignore_object = True
+            is_preprocessor = False
+            process_type = 'none'
+        return (domain_name, object_name, short_path, is_ignore_object, is_dot_folder_object, is_preprocessor, process_type)
     except Exception as e:
         raise Exception(e)
 
-# ---------------------------------------------------------------------
-# Process object to invoke step function
-# ---------------------------------------------------------------------
-def process_object_metadata(source_bucket, source_key, region, domain_name,controller): 
+def package_parameters(source_bucket, source_key, region, domain_name, commands):
     try:         
         partition_values=[]
         source_name = source_key.split('/')[0:1][0]  # get the first prefix and assign it as the source name
@@ -206,29 +230,29 @@ def process_object_metadata(source_bucket, source_key, region, domain_name,contr
         target_gluejb_lambda_arn = 'arn:aws:lambda:' + region + ':' + client_account_id + ':function:' + client_entity + '-lmd-glujb-sync-generator-' + environment
         glue_admin_role_name= client_entity + '-rle-ingest-glue-controller-admin-' + environment
         table_name = domain_name.replace('-','_')
-        data={}
-        data['account_id'] = client_account_id
-        data['glue_db_name'] = glue_db_name
-        data['glue_admin_role_name'] = glue_admin_role_name
-        data['gluejb_lambda_arn'] = target_gluejb_lambda_arn
-        data['src_bucket_name'] = source_bucket
-        data['src_source_name'] = source_name    
-        data['source_file_path'] = path
-        data['domain_name'] = domain_name
-        data['crawler_name'] = crawler_name
-        data['table_name'] = table_name
-        data['partitions'] = partitions
-        data['partition_values'] = partition_values
-        data['replicate'] = replicate
-        data['db_name'] = db_name
-        data['db_schema'] = db_schema    
-        params=json.dumps(data)
-        
-        resp = invoke_controller_stepfunction(client_account_id, glue_db_name, region, params, controller, state_machine_arn=event_controller_stepfn_arn)
-        return resp
+        event_vars={}
+        event_vars['account_id'] = client_account_id
+        event_vars['entity'] = client_entity
+        event_vars['glue_db_name'] = glue_db_name
+        event_vars['glue_admin_role_name'] = glue_admin_role_name
+        event_vars['gluejb_lambda_arn'] = target_gluejb_lambda_arn
+        event_vars['src_bucket_name'] = source_bucket
+        event_vars['src_source_name'] = source_name    
+        event_vars['source_file_path'] = path
+        event_vars['domain_name'] = domain_name
+        event_vars['crawler_name'] = crawler_name
+        event_vars['table_name'] = table_name
+        event_vars['partitions'] = partitions
+        event_vars['partition_values'] = partition_values
+        event_vars['replicate'] = replicate
+        event_vars['db_name'] = db_name
+        event_vars['db_schema'] = db_schema
+        event_vars['commands']=commands
+        return (client_account_id, glue_db_name, region, event_vars)
     except Exception as e:
-        raise Exception(e)
-        
+        raise Exception(e)    
+
+
 # -------------------------------------------------
 # Main lambda function
 # -------------------------------------------------
@@ -241,29 +265,22 @@ def lambda_handler(event, context):
                 source_bucket = record['s3']['bucket']['name']
                 source_key = urllib.parse.unquote_plus(record['s3']['object']['key'], encoding='utf-8')
                 region = record['awsRegion']
-                (domain_name, object_name, short_path, is_object_file, is_dot_folder_object, is_ignore_object, \
-                    is_access_control, is_cleanup) = get_object_details(source_bucket, source_key)
-                if is_dot_folder_object != -1 
-                    if is_access_control != -1:
-                        controller = 'access-control'
-                    elif is_cleanup != -1:
-                        controller = 'metadata-purger'
-                    (client_account_id, client_entity, replicate, db_name, db_schema, glue_db_name) = get_config_details(source_bucket)
-                    fileObj = s3_client.get_object(Bucket= source_bucket, Key=source_key)
-                    params = fileObj['Body'].read().decode('utf-8').splitlines()
-                    resp = invoke_controller_stepfunction(client_account_id, glue_db_name, region, params, controller, state_machine_arn=event_controller_stepfn_arn)
-                elif is_object_file and object_name and is_dot_folder_object == -1 and is_ignore_object == -1:
-                    extension = object_name.split('.')[-1].lower() # get the file extension.
-                    if extension == 'xml' or extension == 'xls' or extension == 'xlsx' or extension == 'md':
-                        resp = invoke_converter_stepfunction(source_bucket, source_key, domain_name, object_name, extension, state_machine_arn=event_converter_stepfn_arn)
-                    else:
-                        controller = 'metadata-generate'
-                        resp = process_object_metadata(source_bucket, source_key, region, domain_name,controller)
+                (domain_name, object_name, short_path, is_ignore_object, is_dot_folder_object, is_preprocessor, process_type) = get_object_details(source_bucket, source_key)
+                    
+                if is_ignore_object:
+                    resp= source_bucket +  '/' + source_key + ' is not a valid file.. processing ignored!'
+                    logger(f'ignoring the object {source_key} since it is not a valid file to generate metadata')
+                elif is_preprocessor:
+                    resp = invoke_converter_stepfunction(source_bucket, source_key, domain_name, object_name, extension, state_machine_arn=event_converter_stepfn_arn)
                 else:
-                    if is_dot_folder_object != -1 or is_ignore_object != -1:
-                        resp= source_bucket +  '/' + source_key + ' is not a valid file.. processing ignored!'
+                    if is_dot_folder_object:                    
+                        fileObj = s3_client.get_object(Bucket= source_bucket, Key=source_key)
+                        commands = fileObj['Body'].read().decode('utf-8').splitlines()
                     else:
-                        resp=source_bucket +  '/' + source_key + ' is not a valid file to process. Please ensure files are nested with data source and dataset prefix...  processing ignored!'
+                        commands='none'
+                    (client_account_id, glue_db_name, region, event_vars) = package_parameters(source_bucket, source_key, region, domain_name, commands)
+                    params=json.dumps(event_vars)
+                    resp = invoke_controller_stepfunction(client_account_id, glue_db_name, region, params, controller=process_type, state_machine_arn=event_controller_stepfn_arn)
             return {
                 'body': resp,
                 'statusCode': 200

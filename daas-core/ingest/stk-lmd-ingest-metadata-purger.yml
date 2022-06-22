@@ -13,27 +13,27 @@ Parameters:
     Type: String
 
 Resources:
-  CreateDaaSRawMetadataPurgeLambda:
+  CreateDaaSIngMetadataPurgeLambda:
     Type: 'AWS::CloudFormation::Stack'
     Properties :
       Parameters:
         Description: !Sub Datalake as a Service Core raw metadata purger deployed in ${Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
-        HandlerName: lmd-raw-metadata-purger.lambda_handler        
+        HandlerName: ingest/lmd-ingest-metadata-purger.lambda_handler        
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         MemorySize: 128
-        Name: !Sub ${Entity}-lmd-raw-metadata-purger-${Environment}        
+        Name: !Sub ${Entity}-lmd-ingest-metadata-purger-${Environment}        
         Timeout: 120
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 
-  CreateDaaSRawMetadataPurgePolicy:
+  CreateDaaSIngMetadataPurgePolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
       Roles:
-        - !GetAtt CreateDaaSRawMetadataPurgeLambda.Outputs.LambdaRole
-      PolicyName: plc-inline-lmd-raw-metadata-pruge
+        - !GetAtt CreateDaaSIngMetadataPurgeLambda.Outputs.LambdaRole
+      PolicyName: plc-inline-lmd-ingest-metadata-purge
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -42,10 +42,4 @@ Resources:
             Effect: "Allow"
             Action: "sts:AssumeRole"
             Resource: 
-              Fn::Sub: "arn:aws:iam::*:role/${Entity}-rle-glue-controller-admin-${Environment}"
-          -
-            Sid: "assumeDaaSMetadataPurgeRole"
-            Effect: "Allow"
-            Action: "sts:AssumeRole"
-            Resource: 
-              Fn::Sub: "arn:aws:iam::*:role/rle-${Entity}-lmd-metadata-purger-${Environment}"
+              Fn::Sub: "arn:aws:iam::*:role/*-ingest-glue-controller-admin-${Environment}"

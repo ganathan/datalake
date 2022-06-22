@@ -50,14 +50,14 @@ then
     # sleep 90
 
     # NOTE: Ingestion Layer
-    deploy_stack ingest sqs ingest-daas-core 
-    deploy_stack ingest lmd ingest-invoker 1
-    deploy_stack ingest lmd ingest-metadata-generator 1
+    # deploy_stack ingest sqs ingest-daas-core 
+    # deploy_stack ingest lmd ingest-invoker 1
+    # deploy_stack ingest lmd ingest-metadata-generator 1
     deploy_stack ingest lmd ingest-metadata-purger 1  
-    deploy_stack ingest lmd excel-processor 1
-    deploy_stack ingest lmd xml-processor 1
-    deploy_stack ingest stpfn ingest-event-controller
-    deploy_stack ingest stpfn event-converter
+    # deploy_stack ingest lmd excel-processor 1
+    # deploy_stack ingest lmd xml-processor 1
+    # deploy_stack ingest stpfn ingest-event-controller
+    # deploy_stack ingest stpfn event-converter
     # sleep 90
     
     # NOTE: Curation Layer

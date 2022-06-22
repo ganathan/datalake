@@ -20,7 +20,7 @@ Resources:
         Description: !Sub Lambda Invoker for Datalake as a Service deployed in ${Environment}
         Entity: !Ref Entity
         Environment: !Ref Environment
-        HandlerName: lmd-ingest-invoker.lambda_handler
+        HandlerName: ingest/lmd-ingest-invoker.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         LambdaEnvVarFileName: !Sub stacks/stk-lmd-ingest-invoker/stk-lmd-ingest-invoker-env-var.yml
         MemorySize: 128 
