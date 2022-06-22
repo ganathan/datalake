@@ -5,12 +5,16 @@
 # ----------------------------------------------------------------------------------------------
 import json
 import boto3
-    
+import os
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # -------------------------------------------------
-# Check if Crawler exits
+# Check if Glue Crawler exits
 # -------------------------------------------------
-def crawler_exits(glue_client, crawler_name):
+def crawler_exists(glue_client, crawler_name):
     try:
         # call the get crawler, if response fails then crawler is not defined
         response = glue_client.get_crawler(
@@ -18,22 +22,37 @@ def crawler_exits(glue_client, crawler_name):
         )
         return True
     except glue_client.exceptions.EntityNotFoundException:
-        print(f"crawler %s does not exist... ignoring!' %(crawler_name)")
+        print(f"crawler {crawler_name} does not exist... ignoring!")
         return False
 
-
+# -------------------------------------------------
+# Check if Glue Table exits
+# -------------------------------------------------
+def table_exists(glue_client, glue_db_name, dataset):
+    try:
+        # call the get table, if response fails then table is not defined
+        response = glue_client.get_table(
+            DatabaseName=glue_db_name,
+            Name=dataset
+        )
+        return True
+    except glue_client.exceptions.EntityNotFoundException:
+        print(f"table {dataset} does not exist... ignoring!")
+        return False
+        
 # -------------------------------------------------
 # Drop the Glue Table
 # -------------------------------------------------
-def drop_table(glue_client, glue_db_name, table_name, partition_values):
+def drop_table(glue_client, glue_db_name, dataset):
     try:
         response = glue_client.delete_table(
             DatabaseName=glue_db_name,
-            TableName=table_name
-        )   
+            Name=dataset
+        )
+        logger.info(f'removed table {dataset} in database {glue_db_name}')
         return response
     except glue_client.exceptions.EntityNotFoundException:
-        response = f"table %s does not exist %s in database... ignoring!' %(table_name, glue_db_name)"
+        response = f"table {dataset} does not exist {glue_db_name} in database... ignoring!"
         return response
 
 
@@ -45,6 +64,7 @@ def remove_crawler(glue_client, crawler_name):
         response = glue_client.delete_crawler(
             Name=crawler_name
         )
+        logger.info(f'removed crawler {crawler_name}')
         return response
     except Exception as e:
         return f'Unable to remove crawler {e}'
@@ -98,23 +118,35 @@ def get_glue_client(region,target_glue_service_role_arn):
 def lambda_handler(event, context):
     print(event)
     try:
+        environment = os.environ["ENV_VAR_ENVIRONMENT"]
         account_id = event['account_id']
         region = event['region']
         params = json.loads(event['params'])
         client_account_id = params['account_id']
+        client_entity = params['entity']
         glue_db_name = params['glue_db_name']
         glue_admin_role_name = params['glue_admin_role_name']
-        crawler_name = params['crawler_name']
         table_name = params['table_name']
-        event_name = crawler_name
-        target_glue_service_role_arn='arn:aws:iam::' + client_account_id + ':role/' + glue_admin_role_name
-        print(target_glue_service_role_arn)
-        glue_client = get_glue_client(target_glue_service_role_arn)
-        if crawler_exits(glue_client, crawler_name):
-            print('1a')
-            resp = remove_crawler(glue_client, crawler_name)
-            resp = drop_table(glue_client, glue_db_name, table_name)
-            resp = delete_cloudwatch_event(glue_client, event_name)
+        commands = params['commands']
+        for command in commands:
+            try:
+                datasource = command.split('/')[0]
+                dataset = command.split('/')[1]
+                crawler_name = client_entity + '-' + datasource + '-' + dataset + '-' + 'raw-crawler' + '-' + environment
+                event_name = crawler_name
+                target_glue_service_role_arn='arn:aws:iam::' + client_account_id + ':role/' + glue_admin_role_name
+                glue_client = get_glue_client(region, target_glue_service_role_arn)
+                logger.info(f'processing carwler {crawler_name}')
+                if crawler_exists(glue_client, crawler_name):
+                    resp = remove_crawler(glue_client, crawler_name)
+                logger.info(f'processing table {dataset}')
+                if table_exists(glue_client, glue_db_name, dataset):
+                    resp = drop_table(glue_client, glue_db_name, dataset)
+                    resp = delete_cloudwatch_event(glue_client, event_name)
+                else:
+                    resp = f"Unable to find crawler {crawler_name} ignoring!"
+            except Exception as e:
+                resp = f'Got an exception {e}'
         return {
             'body': resp,
             'statusCode': 200

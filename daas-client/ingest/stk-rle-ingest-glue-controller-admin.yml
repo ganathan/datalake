@@ -69,6 +69,7 @@ Resources:
             Action:
               - 'events:PutRule'
               - 'events:PutTargets'
+              - 'events:RemoveTargets'
             Resource:
               - '*'
           - Sid: 'allowPassRole'
