@@ -23,7 +23,7 @@ Resources:
         EnableOpenPyXmlLayer: true
         EnablePandasLayer: true
         EnableXmlToDictLayer: true
-        HandlerName: lmd-xml-processor.lambda_handler
+        HandlerName: ingest/lmd-xml-processor.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         MemorySize: 128 
         Name: !Sub ${Entity}-lmd-xml-processor-${Environment}

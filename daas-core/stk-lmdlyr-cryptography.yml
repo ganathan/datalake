@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: cryptography Lambda layer for data lake as a service - core (DaaS - Core)
+
+# Required Parameters: Environment
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  Name:
+    Type: String
+    Default: cryptography
+
+Resources:
+  CreateCryptographyLayer:
+    Type: AWS::CloudFormation::Stack
+    Properties :
+      Parameters:
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        LayerName: !Sub ${Name}
+        Name: !Sub ${Name}-${Environment}        
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmdlyr/scripts/template/cft-lmdlyr-common-template.yml
+      TimeoutInMinutes : '60'

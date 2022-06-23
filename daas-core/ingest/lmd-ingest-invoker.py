@@ -182,20 +182,17 @@ def get_object_details(source_bucket, source_key):
         
         is_ignore_object =  (False if short_path.find('-daas-gen-raw') == -1 else True)
         is_dot_folder_object = (False if short_path.rfind('.',0) == -1 else True)
-
+        is_preprocessor = False
+        extension = 'none'
         if is_ignore_object:
-            is_preprocessor = False
             process_type = 'none'
         elif is_dot_folder_object:
             if (False if object_name.find('access-config.txt') == -1 else True):
-                is_preprocessor = False
                 process_type = 'access-control'
             elif (False if object_name.find('cleanup.txt') == -1 else True):
-                is_preprocessor = False
                 process_type = 'metadata-purger'
             else:                                   # could be a folder or subfolders can be ignored
                 is_ignore_object = True
-                is_preprocessor = False
                 process_type = 'none'
         elif is_file(source_bucket, source_key, prefix) and object_name:
             extension = object_name.split('.')[-1].lower() # get the file extension.
@@ -204,12 +201,10 @@ def get_object_details(source_bucket, source_key):
                 process_type = 'convert'
             else:
                 process_type = 'metadata-generate'
-                is_preprocessor = False
         else:                                      # could be a folder or subfolder (patition keys)
             is_ignore_object = True
-            is_preprocessor = False
             process_type = 'none'
-        return (domain_name, object_name, short_path, is_ignore_object, is_dot_folder_object, is_preprocessor, process_type)
+        return (domain_name, object_name, short_path, is_ignore_object, is_dot_folder_object, is_preprocessor, process_type, extension)
     except Exception as e:
         raise Exception(e)
 
@@ -268,7 +263,7 @@ def lambda_handler(event, context):
                 source_bucket = record['s3']['bucket']['name']
                 source_key = urllib.parse.unquote_plus(record['s3']['object']['key'], encoding='utf-8')
                 region = record['awsRegion']
-                (domain_name, object_name, short_path, is_ignore_object, is_dot_folder_object, is_preprocessor, process_type) = get_object_details(source_bucket, source_key)
+                (domain_name, object_name, short_path, is_ignore_object, is_dot_folder_object, is_preprocessor, process_type, extension) = get_object_details(source_bucket, source_key)
                     
                 if is_ignore_object:
                     resp= source_bucket +  '/' + source_key + ' is not a valid file.. processing ignored!'

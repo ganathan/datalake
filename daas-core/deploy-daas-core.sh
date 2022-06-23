@@ -40,6 +40,7 @@ then
     # deploy_stack ngw
     # deploy_stack . sgrp lmd-default
     # deploy_stack . lmdlyr xmltodict
+    deploy_stack . lmdlyr cryptography
     # deploy_stack . s3 daas-core-setup-bucket    
     # sleep 90
 
@@ -53,7 +54,7 @@ then
     # deploy_stack ingest sqs ingest-daas-core 
     # deploy_stack ingest lmd ingest-invoker 1
     # deploy_stack ingest lmd ingest-metadata-generator 1
-    deploy_stack ingest lmd ingest-metadata-purger 1  
+    # deploy_stack ingest lmd ingest-metadata-purger 1  
     # deploy_stack ingest lmd excel-processor 1
     # deploy_stack ingest lmd xml-processor 1
     # deploy_stack ingest stpfn ingest-event-controller

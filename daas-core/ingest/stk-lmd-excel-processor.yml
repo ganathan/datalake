@@ -23,7 +23,7 @@ Resources:
         EnableOpenPyXmlLayer: true
         EnablePandasLayer: true
         EnableXmlToDictLayer: true
-        HandlerName: lmd-excel-processor.lambda_handler
+        HandlerName: ingest/lmd-excel-processor.lambda_handler
         LambdaCompressedFileName: !Sub ${LambdaZipFileName}
         MemorySize: 256
         Name: !Sub ${Entity}-lmd-excel-processor-${Environment}
