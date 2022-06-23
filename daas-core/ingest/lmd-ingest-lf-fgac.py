@@ -70,7 +70,7 @@ def get_role_arn(account_id, index, command_components):
 # ---------------------------------------------------------------------------
 def parse(command, account_id):
     command_components = command.split()
-    root_command = get_root_command(command_components[0])
+    root_command = get_root_command(command_components[0].upper())
     permission=[command_components[1]]
     table_name=command_components[3]
     filter=get_filter(command_components)
@@ -82,13 +82,13 @@ def parse(command, account_id):
 # -------------------------------------------------
 # get the glue daas client
 # -------------------------------------------------
-def get_lakeformation_client(region,target_lf_service_role_arn):
+def get_lakeformation_client(region, target_lf_service_role_arn):
     try:
         url='https://sts.' + region + '.amazonaws.com/'
         sts_connection = boto3.client('sts', region_name=region, endpoint_url=url)
         
         daas_client = sts_connection.assume_role(
-            RoleArn=target_glue_service_role_arn,
+            RoleArn=target_lf_service_role_arn,
             RoleSessionName="daas-core"
         )
         ACCESS_KEY = daas_client['Credentials']['AccessKeyId']
@@ -97,7 +97,7 @@ def get_lakeformation_client(region,target_lf_service_role_arn):
         lf_client = boto3.client('glue', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, aws_session_token=SESSION_TOKEN)
         return lf_client
     except Exception as e:
-        raise Exception(f'Unable to assume role {target_glue_service_role_arn}! {e}')
+        raise Exception(f'Unable to assume role {target_lf_service_role_arn}! {e}')
 
 # ------------------------------------------------------------
 # get the resource mapped either with rows or columns or none
