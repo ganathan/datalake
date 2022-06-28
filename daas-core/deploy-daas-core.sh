@@ -56,12 +56,15 @@ then
     # deploy_stack ingest lmd ingest-metadata-generator 1
     # deploy_stack ingest lmd ingest-metadata-purger 1  
     # deploy_stack ingest lmd excel-processor 1
-    deploy_stack ingest lmd xml-processor 1
+    # deploy_stack ingest lmd xml-processor 1
     # deploy_stack ingest stpfn ingest-event-controller
     # deploy_stack ingest stpfn event-converter
     # sleep 90
     
-    # NOTE: Curation Layer
+    # For lakeformation FGAC ---->
+    deploy_stack ingest lmd ingest-lf-fgac 1
+
+    # NOTE: Curation Layer ----->
     # deploy_stack curate sqs curate-daas-core 
     # deploy_stack curate lmd curate-model-generator 1
 else

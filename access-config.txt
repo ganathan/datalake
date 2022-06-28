@@ -1,2 +1,19 @@
 GRANT SELECT ON logs COLUMNS ticker, fundname, dailyytd TO aws_test_user
 GRANT SELECT ON logs COLUMNS gross, net TO aws_test_user
+GRANT SELECT ON some_table TO aws_test_user
+REVOKE SELECT ON some_table TO aws_test_user
+
+GRANT SELECT ON some_table COLUMNS ticker, fundname, year1 TO aws_test_user
+REVOKE SELECT ON some_table COLUMNS ticker, fundname, year1 TO aws_test_user
+
+GRANT SELECT ON sfdc COLUMNS col_1, col_2, col_3, col_4 TO aws_test_user
+REVOKE SELECT ON sfdc COLUMNS col_3, col_4 TO aws_test_user
+GRANT SELECT ON sfdc COLUMNS col_5, col_9 TO aws_test_user
+REVOKE SELECT ON sfdc COLUMNS col_2 TO aws_test_user
+LIST GRANT ON sfdc TO aws_test_user
+LIST GRANT ON sfdc
+
+
+LIST GRANT ON some_table TO aws_test_user
+LIST GRANT ON some_table
+GRANT SELECT ON vg_fund ROWS col0 in ('VWNDX','IVOO','VRVIX') TO aws_test_user

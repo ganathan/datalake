@@ -38,9 +38,6 @@ then
         then
             lambdaVersion=100
         fi
-
-        echo 'inside lambda '
-        echo $lambdaVersion
         
         # First delete the existing zip file. this ensures always a fresh zip file is created and deployed!
         rm $layer/$serviceType-$app-$lambdaVersion.zip

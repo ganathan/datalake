@@ -10,9 +10,10 @@ daasCoreEntity=$6
 
 deploy_stack(){
     # process the arguments
-    serviceType=$1
-    app=$2
-    lambdaVersion=$3
+    layer=$1
+    serviceType=$2
+    app=$3
+    lambdaVersion=$4
 
     if [ -z "$app" ]
     then
@@ -26,12 +27,12 @@ deploy_stack(){
     then
        
         # call the child stack
-        sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion $daasCoreAccountId $daasCoreEntity
+        sh ../deploy-stack.sh $layer $entity $accountId $region $environment $serviceType $app $lambdaVersion $daasCoreAccountId $daasCoreEntity
     elif [ "$serviceType" != "tag" ]
     then
       
         # call the child stack
-        sh ../deploy-stack.sh $entity $accountId $region $environment $serviceType $app $lambdaVersion $daasCoreAccountId
+        sh ../deploy-stack.sh $layer $entity $accountId $region $environment $serviceType $app $lambdaVersion $daasCoreAccountId
     fi
 
 
@@ -62,7 +63,7 @@ then
     # deploy_stack . smgr pgrs-srvls-db 
     # sleep 90
 
-    deploy_stack . glucon pgrs-srvls-db
+    # deploy_stack . glucon pgrs-srvls-db
     # deploy_stack . lmd glujb-sync-generator 2
     
     # NOTE: to deploy the client s3 bucket and role use syntax:
@@ -77,6 +78,12 @@ then
     # deploy_stack . ec2 daas-client-bastn-host 
     # sleep 90
 
+    # For lakeformation FGAC ---->
+    # NOTE: to deploy the role use syntax:
+    # sh deploy-daas-client.sh <entity> <client account id> <region> <environment> <core account id> <core entity>
+    deploy_stack ingest rle ingest-lf-fgac-admin $daasCoreAccountId $daasCoreEntity
+
+    # For curation Layer --->
     # curateQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-curate-daas-core-$environment
     # deploy_stack s3 daas-client-test-cur-bucket $curateQueueArn $daasCoreAccountId $daasCoreEntity    
     # deploy_stack s3 daas-client-test-dist-bucket arn:aws:sqs:$region:$daasCoreAccountId:$entity-sqs-dist-daas-core-$environment
