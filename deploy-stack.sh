@@ -16,6 +16,12 @@ daasCoreEntity=$10
 stackName=stk-$serviceType-$app
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 type=update
+echo 'inside stack....'
+echo $daasCoreAccountId
+echo $daasCoreEntity
+echo 'the service type...'
+echo $serviceType
+echo $app
 
 # Check if parameters are defined
 if [ ! -z "$layer" ] && [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ]  && [ ! -z "$serviceType" ] && [ ! -z "$app" ] 
@@ -110,15 +116,16 @@ then
     then
         if [ ! -z "$s3QueueArn" ]
         then
+            echo $s3QueueArn
             # s3 bucket with event queue arn. 
-            aws cloudformation $type-stack \
-                --stack-name $stackName-$environment \
-                --region $region \
-                --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-                --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-                        ParameterKey=EventQueueArn,ParameterValue=$s3QueueArn ParameterKey=DaasCoreAccountId,ParameterValue=$daasCoreAccountId \
-                        ParameterKey=DaasCoreEntity,ParameterValue=$daasCoreEntity \
-                --capabilities CAPABILITY_AUTO_EXPAND
+           # aws cloudformation $type-stack \
+           #     --stack-name $stackName-$environment \
+           #     --region $region \
+           #     --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
+           #     --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
+           #             ParameterKey=EventQueueArn,ParameterValue=$s3QueueArn ParameterKey=DaasCoreAccountId,ParameterValue=$daasCoreAccountId \
+           #             ParameterKey=DaasCoreEntity,ParameterValue=$daasCoreEntity \
+           #     --capabilities CAPABILITY_AUTO_EXPAND
         else
             # s3 bucket with no event queue arn.
             aws cloudformation $type-stack \
@@ -178,6 +185,9 @@ then
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
     elif [ "$serviceType" == "vpc" ]
     then
+        echo ' the template url is ...'
+        echo "https://s3-${region}.amazonaws.com/${commonS3Bucket}/${serviceType}/scripts/stacks/${stackName}/${stackName}.yml"
+
         # create or update the cloudformation stack
         aws cloudformation $type-stack \
             --stack-name $stackName-$environment \

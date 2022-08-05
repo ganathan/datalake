@@ -8,13 +8,19 @@ serviceType="$5"
 templateName=cft-$serviceType-common
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
 
+
 # Check if parameters are defined
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$environment" ] && [ ! -z "$region" ] && [ ! -z "$serviceType" ]
 then
     # Check if common bucket exits
     if aws s3 ls "$commonS3Bucket" 2>&1 | grep -q 'bucket does not exist'; then
-        #Create the common bucket first
-        aws s3api  create-bucket --acl private --bucket $commonS3Bucket --region $region --create-bucket-configuration LocationConstraint=$region
+        if [ "$region" != "us-east-1" ]
+        then
+            #Create the common bucket first
+            aws s3api  create-bucket --acl private --bucket $commonS3Bucket --region $region --create-bucket-configuration LocationConstraint=$region
+        else
+            aws s3api  create-bucket --acl private --bucket $commonS3Bucket --region $region
+        fi
         sleep 20
         # Make common bucket private
         aws s3api put-public-access-block --bucket $commonS3Bucket --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"

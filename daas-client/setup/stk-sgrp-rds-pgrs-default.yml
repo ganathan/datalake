@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Default Security Group for lambdas in data lake as a service - core (DaaS - Core)
+Description: Default Security Group for RDS Postgres in data lake as a service - core (DaaS - Client)
 
 Parameters:
   Entity:
@@ -8,16 +8,16 @@ Parameters:
   Environment:
      Type: String
      Default: dev
-     AllowedValues: [dev, tst, int, uat, prd, poc]
+     AllowedValues: [dev, tst, int, qa, uat, prd, poc]
 
 Resources:
-  CreateDfltLmdSgrpForDaaSCore:
+  CreateDfltLmdSgrpForDaaSClient:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
-        Description: Default Lambda secruity group for Daas Core      
+        Description: Default RDS Postgres secruity group for Daas Client      
         Entity: !Ref Entity
         Environment: !Ref Environment
-        Name: !Sub '${Entity}-sgrp-lmd-default-${Environment}'
+        Name: !Sub '${Entity}-sgrp-rds-pgrs-default-${Environment}'
       TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sgrp/scripts/template/cft-sgrp-common-template.yml
       TimeoutInMinutes: '60'

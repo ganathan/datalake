@@ -16,7 +16,7 @@ Parameters:
     Default: ganesh
   Environment:
     Type: String
-    AllowedValues: [dev, tst, int, uat, prd, poc]
+    AllowedValues: [dev, tst, int, qa, uat, prd, poc]
   Name:
     Type: String
     Default: daas-ngw

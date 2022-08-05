@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Default Security Group for lambdas in data lake as a service - core (DaaS - Client)
+Description: Default Security Group for lambdas in data lake as a service - core (DaaS - Core)
 
 Parameters:
   Entity:
@@ -8,14 +8,14 @@ Parameters:
   Environment:
      Type: String
      Default: dev
-     AllowedValues: [dev, tst, int, uat, prd, poc]
+     AllowedValues: [dev, tst, int, qa, uat, prd, poc]
 
 Resources:
-  CreateDfltLmdSgrpForDaaSClient:
+  CreateDfltLmdSgrpForDaaSCore:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
-        Description: Default Lambda secruity group for Daas Client      
+        Description: Default Lambda secruity group for Daas Core      
         Entity: !Ref Entity
         Environment: !Ref Environment
         Name: !Sub '${Entity}-sgrp-lmd-default-${Environment}'

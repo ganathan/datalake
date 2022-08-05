@@ -9,7 +9,7 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    AllowedValues: [dev, tst, int, uat, prd, poc]
+    AllowedValues: [dev, tst, int, qa, uat, prd, poc]
   SecretString:
     Type: String
     Default: '{"username": "xxx", "password": "xxx!", "endpoint": "xxx", "url":"jdbc:postgresql://xxx:5432/daas","port":"5432"}'
