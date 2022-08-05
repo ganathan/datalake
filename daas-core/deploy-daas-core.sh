@@ -30,6 +30,9 @@ deploy_stack(){
     fi
 }
 
+# NOTE: These are mandatory steps:
+# 1. Once deployed change the id-config.csv file to map the account id. The client name must match the client entity name in the config file.
+# 2. Private subnet is mapped to NGW, add a route to the NGW
 
 # Check if parameters are defined
 if [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ] 
@@ -51,15 +54,15 @@ then
     # sleep 90
 
     # NOTE: open the id-config.csv file and update the account id with the appropriate client account id.
-    # bucketPath=$entity-s3-$region-daas-core-setup-bucket-$environment
+    bucketPath=$entity-s3-$region-daas-core-setup-bucket-$environment
     # aws s3 cp ./setup/setup.csv s3://$bucketPath/.daas-setup/setup.csv
-    # aws s3 cp ./setup/id-config.csv s3://$bucketPath/.daas-setup/id-config.csv
+    aws s3 cp ./setup/id-config.csv s3://$bucketPath/.daas-setup/id-config.csv
     # sleep 90
 
     # NOTE: Ingestion Layer
     # deploy_stack ingest sqs ingest-daas-core 
     # sleep 90
-    deploy_stack ingest lmd ingest-invoker 1
+    # deploy_stack ingest lmd ingest-invoker 1
     # deploy_stack ingest lmd ingest-metadata-generator 1
     # deploy_stack ingest lmd ingest-metadata-purger 1  
     # deploy_stack ingest lmd excel-processor 1
