@@ -12,12 +12,6 @@ deploy_stack(){
     serviceType=$2
     app=$3
     lambdaVersion=$4
-    echo 'inside dpely stk'
-    echo $serviceType
-    echo $accountId
-    echo $region
-    echo $environment
-    echo $entity
 
     if [ -z "$app" ]
     then

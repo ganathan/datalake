@@ -69,8 +69,8 @@ then
     # NOTE: to deploy the client s3 bucket and role use syntax:
     # sh deploy-daas-client.sh <entity> <client account id> <region> <environment> <core account id> <core entity>
     # deploy_stack ingest rle ingest-glue-controller-admin $daasCoreAccountId $daasCoreEntity
-    # rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
-    # deploy_stack ingest s3 lf-raw-sample-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
+    rawQueueArn=arn:aws:sqs:$region:$daasCoreAccountId:$daasCoreEntity-sqs-ingest-daas-core-$environment
+    deploy_stack ingest s3 lf-cl1-raw-sample-bucket $rawQueueArn $daasCoreAccountId $daasCoreEntity
     # sleep 90
 
     # create a keypair (pem file). Go to ec2 in cosole choose Create Key Pair and provide name <entity>-ec2-bastion-host.pem Add tag as needed. Browser will download the file.
