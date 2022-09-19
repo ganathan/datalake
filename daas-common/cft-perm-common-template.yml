@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Permission Set Common CloudFormation Stack
+
+Mappings:
+  <Enitity-core-xxxx>:
+    us-west-2:
+      dev: arn:aws:sso:::instance/ssoins-<xxxxxxx>
+      tst: arn:aws:sso:::instance/ssoins-<xxxxxxx>
+      uat: arn:aws:sso:::instance/ssoins-<xxxxxxx>
+      prd: arn:aws:sso:::instance/ssoins-<xxxxxxx>
+  <Enitity-client-xxxx>:
+    us-west-2:
+      dev: arn:aws:sso:::instance/ssoins-<xxxxxxx>
+      tst: arn:aws:sso:::instance/ssoins-<xxxxxxx>
+      uat: arn:aws:sso:::instance/ssoins-<xxxxxxx>
+      prd: arn:aws:sso:::instance/ssoins-<xxxxxxx> 
+  
+
+Parameters:
+  Application:
+    Type: String
+    Default: daas
+  BusinessUnit:
+    Type: String
+    Default: private
+  CostCenter:
+    Type: String
+    Default: personal
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    AllowedValues: [dev, tst, int, uat, prd, poc]
+  InstanceArn:
+    Type: String
+  Name:
+    Type: String
+    Default: daas-permissionset
+  Project:
+    Type: String
+    Default: daas
+  PolicyFileName:
+    Type: String
+    Default: template/cft-perm-common-policy.yml  
+  SessionDuration:
+    Type: String
+    Default: PT12H
+  Support:
+    Type: String
+    Default: nathan.ganesh@gmail.com
+  TagsVarFileName:
+    Type: String
+    Default: template/cft-tag-common-var.yml
+
+Resources:
+  CreatePermissionSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      Description: !Ref Description
+      Fn::Transform:
+        Name: AWS::Include
+        Parameters:
+          Location:
+            Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/tag/scripts/${PolicyFileName}'
+      InstanceArn: !FindInMap [!Ref Entity, !Ref "AWS::Region", !Ref Environment ]
+      Name: !Sub '${Name}-${Environment}'
+      SessionDuration: !Ref SessionDuration
+      Fn::Transform:
+        Name: AWS::Include
+        Parameters:
+          Location:
+            Fn::Sub: 's3://${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/tag/scripts/${TagsVarFileName}'
+
+Outputs:
+  PermissionSetStackName:
+    Description: PermissionSet Stack Name
+    Value: !Sub '${AWS::StackName}'
+    Export:
+      Name: !Sub '${Entity}-perm-stack-name'
