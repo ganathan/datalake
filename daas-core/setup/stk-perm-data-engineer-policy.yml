@@ -1,0 +1,57 @@
+InlinePolicy:
+  Statement:
+    - Action:
+        - logs:*
+        - tag:*
+      Effect: Allow
+      Resource: "*"
+      Sid: LogsNTagsAccess
+    - Action:
+        - kms:Decrypt
+        - kms:Encrypt
+        - kms:GenerateDataKey*
+        - kms:ReEncrypt*
+      Effect: Allow
+      Resource: "*"
+      Sid: KMSEncryptDecryptAccess
+    - Action: iam:PassRole
+      Effect: Allow
+      Resource: arn:aws:iam::*:role/AWSGlueServiceRole*
+      Sid: GlueServiceIamPassRoleAccess
+  Version: "2012-10-17"
+ManagedPolicies:
+  - Fn::Join:
+      - ""
+      - - "arn:"
+        - Ref: AWS::Partition
+        - :iam::aws:policy/AmazonS3FullAccess 
+  - Fn::Join:
+      - ""
+      - - "arn:"
+        - Ref: AWS::Partition
+        - :iam::aws:policy/AWSGlueConsoleFullAccess
+  - Fn::Join:
+      - ""
+      - - "arn:"
+        - Ref: AWS::Partition
+        - :iam::aws:policy/AmazonAthenaFullAccess
+  - Fn::Join:
+      - ""
+      - - "arn:"
+        - Ref: AWS::Partition
+        - :iam::aws:policy/AWSLakeFormationDataAdmin
+  - Fn::Join:
+      - ""
+      - - "arn:"
+        - Ref: AWS::Partition
+        - :iam::aws:policy/AWSCloudFormationFullAccess
+  - Fn::Join:
+      - ""
+      - - "arn:"
+        - Ref: AWS::Partition
+        - :iam::aws:policy/AWSLakeFormationCrossAccountManager
+  - Fn::Join:
+      - ""
+      - - "arn:"
+        - Ref: AWS::Partition
+        - :iam::aws:policy/job-function/SupportUser
