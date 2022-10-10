@@ -1,12 +1,12 @@
 #!/bin/bash
 # set variables
 entity=$1
-accountId=$2
-region=$3
-environment=$4
-daasCoreAccountId=$5
-ec2KeyPairName=$6
-daasCoreEntity=$6
+accountId=AccountId=$(aws sts get-caller-identity | jq -r  ".Account")
+region=$2
+environment=$3
+daasCoreAccountId=$4
+ec2KeyPairName=$5
+daasCoreEntity=$5
 
 deploy_stack(){
     # process the arguments

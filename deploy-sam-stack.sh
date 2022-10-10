@@ -15,9 +15,7 @@ daasCoreAccountId=$9
 daasCoreEntity=${10}
 stackName=stk-$serviceType-$app
 commonS3Bucket=$entity-s3-$accountId-$region-common-artifacts-$environment
-type=update
 
-echo "Deploying service ${serviceType}..."
 
 # Check if parameters are defined
 if [ ! -z "$layer" ] && [ ! -z "$entity" ] && [ ! -z "$accountId" ] && [ ! -z "$region" ] && [ ! -z "$environment" ]  && [ ! -z "$serviceType" ] && [ ! -z "$app" ] 
@@ -32,7 +30,7 @@ then
       echo "common bucket found!!"
     fi
 
-    # Lambda service needs special handling...
+    # Services that needs special handling...
     if [ "$serviceType" == "lmd" ]
     then
         # Default lambda version if none provided
@@ -90,53 +88,49 @@ then
        s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml
        
 
-    # Check if stack already exists
-    # stackStatus=$(aws cloudformation describe-stacks --stack-name "${stackName}-${environment}" 2>&1)
-    stackStatus=$(aws cloudformation describe-stacks --stack-name "${stackName}-${environment}" --region "${region}" 2>&1)
-    if echo "${stackStatus}" | grep 'does not exist'; then
-        echo "switching to create stack"
-        type=create
-    fi
-
     if [ "$serviceType" == "lmd" ]
     then
-        # create or update the cloudformation stack
-        aws cloudformation $type-stack \
+        # create or update the lambda using sam
+        sam deploy -t $layer/$stackName.yml \
             --stack-name $stackName-$environment \
+            --s3-bucket $commonS3Bucket \
+            --s3-prefix $serviceType/scripts/stacks/$stackName \
+            --parameter-overrides Entity=$entity Environment=$environment \
+                    LambdaZipFileName=$stackName/$serviceType-$app-$lambdaVersion.zip \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM  CAPABILITY_AUTO_EXPAND \
             --region $region \
-            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-                        ParameterKey=LambdaZipFileName,ParameterValue=$stackName/$serviceType-$app-$lambdaVersion.zip \
-            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+            --no-fail-on-empty-changeset
+        
     elif [ "$serviceType" == "s3" ]
     then
+        echo "inside the s3 service type before sam deploy"
         if [ ! -z "$s3QueueArn" ]
         then
-            aws cloudformation $type-stack \
+            # create or update s3 bucket using sam with daas queue arn notification.        
+            sam deploy -t $layer/$stackName.yml \
                 --stack-name $stackName-$environment \
+                --s3-bucket $commonS3Bucket \
+                --s3-prefix $serviceType/scripts/stacks/$stackName \
+                --parameter-overrides Entity=$entity Environment=$environment \
+                    EventQueueArn=$s3QueueArn DaasCoreAccountId=$daasCoreAccountId DaasCoreEntity=$daasCoreEntity \
+                --capabilities CAPABILITY_AUTO_EXPAND \
                 --region $region \
-                --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-                --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-                        ParameterKey=EventQueueArn,ParameterValue=$s3QueueArn ParameterKey=DaasCoreAccountId,ParameterValue=$daasCoreAccountId \
-                        ParameterKey=DaasCoreEntity,ParameterValue=$daasCoreEntity \
-                --capabilities CAPABILITY_AUTO_EXPAND
+                --no-fail-on-empty-changeset
         else
-            # s3 bucket with no event queue arn.
-            aws cloudformation $type-stack \
+            # create or update s3 bucket using sam with no event queue arn.        
+            sam deploy -t $layer/$stackName.yml \
                 --stack-name $stackName-$environment \
+                --s3-bucket $commonS3Bucket \
+                --s3-prefix $serviceType/scripts/stacks/$stackName \
+                --parameter-overrides Entity=$entity Environment=$environment \
+                --capabilities CAPABILITY_AUTO_EXPAND \
                 --region $region \
-                --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-                --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-                --capabilities CAPABILITY_AUTO_EXPAND
+                --no-fail-on-empty-changeset
         fi
     elif [ "$serviceType" == "ec2" ]
     then
         # check if key pair exists, else create one.
-        echo $ec2KeyPairName
         keyPairStatus=$(aws ec2 wait key-pair-exists --region "${region}" --key-names "${ec2KeyPairName}" 2>&1)
-        echo $keyPairStatus
-        tst="{$keyPairStatus}.is there value"
-        echo $tst
         if [ ! -z "$keyPairStatus" ]
         then
             aws ec2 create-key-pair --key-name $ec2KeyPairName --query "KeyMaterial" --region $region --output text > $ec2KeyPairName.pem
@@ -147,54 +141,55 @@ then
                 aws s3 cp $file  \
                     s3://$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$ec2KeyPairName.pem
             fi
-
         fi
 
-        # create or update the cloudformation stack
-        aws cloudformation $type-stack \
+        # create or update ec2 instance using sam
+        sam deploy -t $layer/$stackName.yml \
             --stack-name $stackName-$environment \
+            --s3-bucket $commonS3Bucket \
+            --s3-prefix $serviceType/scripts/stacks/$stackName \
+            --parameter-overrides Entity=$entity Environment=$environment \
+                KeyName=$ec2KeyPairName Region=$region \
+            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM \
             --region $region \
-            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-                        ParameterKey=KeyName,ParameterValue=$ec2KeyPairName ParameterKey=Region,ParameterValue=$region \
-            --capabilities CAPABILITY_AUTO_EXPAND  
+            --no-fail-on-empty-changeset
+        
     elif [ "$serviceType" == "stpfn" ]
     then
-        # create or update the cloudformation stack
-        aws cloudformation $type-stack \
+        # create or update step function instance using sam
+        sam deploy -t $layer/$stackName.yml \
             --stack-name $stackName-$environment \
+            --s3-bucket $commonS3Bucket \
+            --s3-prefix $serviceType/scripts/stacks/$stackName \
+            --parameter-overrides Entity=$entity Environment=$environment \
+            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM \
             --region $region \
-            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+            --no-fail-on-empty-changeset
+        
     elif [ "$serviceType" == "rle" ]
     then
-        # create or update the cloudformation stack
-        aws cloudformation $type-stack \
+        # create or update iam role instance using sam
+        sam deploy -t $layer/$stackName.yml \
             --stack-name $stackName-$environment \
+            --s3-bucket $commonS3Bucket \
+            --s3-prefix $serviceType/scripts/stacks/$stackName \
+            --parameter-overrides Entity=$entity Environment=$environment \
+                DaasCoreAccountId=$daasCoreAccountId DaasCoreEntity=$daasCoreEntity \
+            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM \
             --region $region \
-            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-                         ParameterKey=DaasCoreAccountId,ParameterValue=$daasCoreAccountId ParameterKey=DaasCoreEntity,ParameterValue=$daasCoreEntity \
-            --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
-    elif [ "$serviceType" == "vpc" ]
-    then
-        # create or update the cloudformation stack
-        aws cloudformation $type-stack \
-            --stack-name $stackName-$environment \
-            --region $region \
-            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-                        ParameterKey=Region,ParameterValue=$region \
-            --capabilities CAPABILITY_AUTO_EXPAND  
+            --no-fail-on-empty-changeset
+
     else
-        # create or update the cloudformation stack
-        aws cloudformation $type-stack \
+        # create or update default (catch all) service using sam
+        sam deploy -t $layer/$stackName.yml \
             --stack-name $stackName-$environment \
+            --s3-bucket $commonS3Bucket \
+            --s3-prefix $serviceType/scripts/stacks/$stackName \
+            --parameter-overrides Entity=$entity Environment=$environment Region=$region \
+            --capabilities CAPABILITY_AUTO_EXPAND \
             --region $region \
-            --template-url https://s3-$region.amazonaws.com/$commonS3Bucket/$serviceType/scripts/stacks/$stackName/$stackName.yml \
-            --parameters ParameterKey=Entity,ParameterValue=$entity ParameterKey=Environment,ParameterValue=$environment \
-            --capabilities CAPABILITY_AUTO_EXPAND  
+            --no-fail-on-empty-changeset 
+
     fi
 else
     echo "Missing required parameter. Usage: deploy-stack.sh <entity> <accountid> <region> <environment> <service type> <application> <<lambda version>>"

@@ -14,7 +14,7 @@ def lambda_handler(event, context):
     logger.info(event)
 
     try:
-        resp="Success!"
+        resp="Place holder! replace with schema validation logic!"
         return {
             'body': resp,
             'statusCode': 200
