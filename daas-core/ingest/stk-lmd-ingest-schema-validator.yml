@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Ingestion layer schema validator for data lake as a service - core (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, qa, uat, prd, poc]
+  LambdaZipFileName:
+    Type: String
+
+
+Resources:
+  CreateSchemaValidatorLambda:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties :
+      Parameters:
+        Description: !Sub Ingestion schema validator for Datalake as a Service deployed in ${Environment}
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        HandlerName: ingest/lmd-schema-validator.lambda_handler
+        LambdaCompressedFileName: !Sub ${LambdaZipFileName}
+        MemorySize: 256
+        Name: !Sub ${Entity}-lmd-schema-validator-${Environment}
+        Timeout: 180
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
+      TimeoutInMinutes : '60'

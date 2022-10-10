@@ -6,6 +6,7 @@ region=$3
 environment=$4
 
 
+
 deploy_stack(){
     # process the arguments
     layer=$1
@@ -51,12 +52,14 @@ then
     # deploy_stack setup lmdlyr xmltodict
     # deploy_stack setup lmdlyr cryptography
     # deploy_stack setup s3 daas-core-setup-bucket    
+    # deploy_stack setup lmd get-security-groups 1
+    # deploy_stack setup lmd get-subnet 1
     # sleep 90
 
     # NOTE: open the id-config.csv file and update the account id with the appropriate client account id.
-    bucketPath=$entity-s3-$region-daas-core-setup-bucket-$environment
+    # bucketPath=$entity-s3-$region-daas-core-setup-bucket-$environment
     # aws s3 cp ./setup/setup.csv s3://$bucketPath/.daas-setup/setup.csv
-    aws s3 cp ./setup/id-config.csv s3://$bucketPath/.daas-setup/id-config.csv
+    # aws s3 cp ./setup/id-config.csv s3://$bucketPath/.daas-setup/id-config.csv
     # sleep 90
 
     # NOTE: Ingestion Layer
@@ -69,6 +72,7 @@ then
     # deploy_stack ingest lmd xml-processor 1
     # deploy_stack ingest stpfn ingest-event-controller
     # deploy_stack ingest stpfn event-converter
+    deploy_stack ingest lmd ingest-schema-validator 2
     # sleep 90
     
     # For lakeformation FGAC ---->

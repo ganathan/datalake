@@ -1,0 +1,10 @@
+Environment:
+  Variables:
+    ENV_VAR_VPC_ID: "vpc-0d9d78fd06f9e3d1e"
+    ENV_VAR_TAG_KEY: "daas-core"
+    ENV_VAR_TAG_VALUE: "true"
+    ENV_VAR_ENVIRONMENT:
+      Fn::Sub: ${Environment}
+    ENV_VAR_LOGGING_LEVEL: "info"
+    ENV_VAR_REGION_NAME:
+      Fn::Sub: ${AWS::Region}

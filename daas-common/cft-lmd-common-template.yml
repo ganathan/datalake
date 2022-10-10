@@ -81,6 +81,12 @@ Parameters:
   LambdaEnvVarFileName:
     Type: String
     Default: template/cft-lmd-common-env-var.yml
+  LambdaGetSubnetName:
+    Type: String
+    Default: lmd-get-subnet
+  LambdaGetSecurityGroupName:
+    Type: String
+    Default: lmd-get-security-groups
   MemorySize:
     Type: String
     Default: 128
@@ -104,12 +110,21 @@ Parameters:
   Support:
     Type: String
     Default: nathan.ganesh@gmail.com
+  TagKey:
+    Type: String
+    Default: daas-lambda
+  TagValue:
+    Type: String
+    Default: true
   TagsVarFileName:
     Type: String
     Default: template/cft-tag-common-var.yml
   Timeout:
     Type: String
     Default: 60
+  VpcId:
+    Type: String
+    Default: vpc-0d9d78fd06f9e3d1e
 
 
 Conditions:
@@ -130,6 +145,27 @@ Conditions:
   isCrossAccountArnEnabled: !Not [ !Equals [!Ref CrossAccountArn, false] ]
 
 Resources:
+
+  LambdaSecurityGroup:
+      Type: 'AWS::CloudFormation::CustomResource'
+      Condition: isVpcConfigEnabled      
+      Version: 1
+      Properties:
+        ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-${LambdaGetSecurityGroupName}-${Environment}
+        VpcId: !Sub ${VpcId}
+        TagKey: !Sub ${TagKey}
+        TagValue: !Sub ${TagValue}
+
+  LambdaSubnet:
+      Type: 'AWS::CloudFormation::CustomResource'
+      Condition: isVpcConfigEnabled
+      Version: 1
+      Properties:
+        ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-${LambdaGetSubnetName}-${Environment}
+        VpcId: !Sub ${VpcId}
+        TagKey: !Sub ${TagKey}
+        TagValue: !Sub ${TagValue}
+
   CreateLambda:
     Type: AWS::Lambda::Function
     Properties :
@@ -211,18 +247,12 @@ Resources:
             Value:
               Fn::Sub: ${Support}
         Timeout : !Ref Timeout
-        VpcConfig :
-            SecurityGroupIds:
-              - !If
-                - isSecurityGroupProvided
-                - !Ref CustomSecurityGroup
-                - Fn::ImportValue:
-                    !Sub ${Entity}-sgrp-lmd-default-${Environment}
-            SubnetIds: 
-              - !ImportValue
-                'Fn::Sub': '${Entity}-private-subnet-1'
-              - !ImportValue
-                'Fn::Sub': '${Entity}-private-subnet-2'
+        VpcConfig : !If
+          - isVpcConfigEnabled
+          - 
+            SecurityGroupIds: !GetAtt LambdaSecurityGroup.SecurityGroups
+            SubnetIds: !GetAtt LambdaSubnet.Subnets
+          - !Ref AWS::NoValue
 
   LambdaRole:
     Type: "AWS::IAM::Role"

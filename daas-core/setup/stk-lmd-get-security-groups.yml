@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Fetch the Security Groups within the VPC for a given tag and key (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, qa, uat, prd, poc]
+  LambdaZipFileName:
+    Type: String
+
+
+Resources:
+  CreateDaaSGetSecurityGroupLambda:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties :
+      Parameters:
+        Description: !Sub Helper lambda to get security groups for a given tag deployed in ${Environment}
+        EnableVpcConfig: False
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        HandlerName: setup/lmd-get-security-groups.lambda_handler
+        LambdaCompressedFileName: !Sub ${LambdaZipFileName}
+        MemorySize: 128
+        Name: !Sub ${Entity}-lmd-get-security-groups-${Environment}        
+        Timeout: 120
+      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
+      TimeoutInMinutes : '60'
+
+  CreateDaaSGetSecurityGroupPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles:
+        - !GetAtt CreateDaaSGetSecurityGroupLambda.Outputs.LambdaRole
+      PolicyName: plc-inline-get-sec-grps
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "allowDaaSGetSecGrpRole"
+            Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Resource: 
+              Fn::Sub: "arn:aws:iam::*:role/*-rle-get-security-groups-${Environment}"
+          -
+            Sid: "allowEc2Access"
+            Effect: "Allow"
+            Action: "ec2:DescribeSecurityGroups"
+            Resource: "*"
+      
