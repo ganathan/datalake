@@ -23,5 +23,5 @@ Resources:
             'Fn::Sub': ${Entity}-sqs-ingest-daas-core-${Environment}-arn
         Name: !Sub ${Entity}-s3-${AWS::Region}-daas-client-test-dist-bucket
         DenyPolicyAccess: false
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/s3/scripts/template/cft-s3-common-template.yml
+      TemplateURL: ../../daas-common/cft-s3-common-template.yml
       TimeoutInMinutes: '60'

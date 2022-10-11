@@ -26,5 +26,5 @@ Resources:
         MemorySize: 256
         Name: !Sub ${Entity}-lmd-schema-validator-${Environment}
         Timeout: 180
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
+      TemplateURL: ../../daas-common/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'

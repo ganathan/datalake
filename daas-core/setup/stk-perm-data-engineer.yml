@@ -23,5 +23,5 @@ Resources:
         Name: !Sub ${Entity}-perm-data-engineer-${Environment}
         PolicyFileName: !Sub stacks/stk-perm-data-engineer/stk-perm-data-engineer-policy.yml
         SessionDuration: PT12H
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/template/cft-rle-common-template.yml
+      TemplateURL: ../../daas-common/cft-rle-common-template.yml
       TimeoutInMinutes: '60'

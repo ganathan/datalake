@@ -98,6 +98,7 @@ then
             --parameter-overrides Entity=$entity Environment=$environment \
                     LambdaZipFileName=$stackName/$serviceType-$app-$lambdaVersion.zip \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM  CAPABILITY_AUTO_EXPAND \
+            --disable-rollback \
             --region $region \
             --no-fail-on-empty-changeset
         
@@ -114,6 +115,7 @@ then
                 --parameter-overrides Entity=$entity Environment=$environment \
                     EventQueueArn=$s3QueueArn DaasCoreAccountId=$daasCoreAccountId DaasCoreEntity=$daasCoreEntity \
                 --capabilities CAPABILITY_AUTO_EXPAND \
+                --disable-rollback \
                 --region $region \
                 --no-fail-on-empty-changeset
         else
@@ -124,6 +126,7 @@ then
                 --s3-prefix $serviceType/scripts/stacks/$stackName \
                 --parameter-overrides Entity=$entity Environment=$environment \
                 --capabilities CAPABILITY_AUTO_EXPAND \
+                --disable-rollback \
                 --region $region \
                 --no-fail-on-empty-changeset
         fi
@@ -151,6 +154,7 @@ then
             --parameter-overrides Entity=$entity Environment=$environment \
                 KeyName=$ec2KeyPairName Region=$region \
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM \
+            --disable-rollback \
             --region $region \
             --no-fail-on-empty-changeset
         
@@ -163,6 +167,7 @@ then
             --s3-prefix $serviceType/scripts/stacks/$stackName \
             --parameter-overrides Entity=$entity Environment=$environment \
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM \
+            --disable-rollback \
             --region $region \
             --no-fail-on-empty-changeset
         
@@ -176,6 +181,7 @@ then
             --parameter-overrides Entity=$entity Environment=$environment \
                 DaasCoreAccountId=$daasCoreAccountId DaasCoreEntity=$daasCoreEntity \
             --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM \
+            --disable-rollback \
             --region $region \
             --no-fail-on-empty-changeset
 
@@ -187,6 +193,7 @@ then
             --s3-prefix $serviceType/scripts/stacks/$stackName \
             --parameter-overrides Entity=$entity Environment=$environment Region=$region \
             --capabilities CAPABILITY_AUTO_EXPAND \
+            --disable-rollback \
             --region $region \
             --no-fail-on-empty-changeset 
 

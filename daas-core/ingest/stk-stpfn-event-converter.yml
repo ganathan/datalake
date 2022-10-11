@@ -22,5 +22,5 @@ Resources:
         Key: !Sub stpfn/scripts/stacks/stk-stpfn-event-converter/stpfn-event-converter.json
         Name: !Sub '${Entity}-stpfn-event-converter-${Environment}'
         StepFnVarFileName: !Sub stacks/stk-stpfn-event-converter/stk-stpfn-event-converter-var.yml
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/stpfn/scripts/template/cft-stpfn-common-template.yml
+      TemplateURL: ../../daas-common/cft-stpfn-common-template.yml
       TimeoutInMinutes: '60'

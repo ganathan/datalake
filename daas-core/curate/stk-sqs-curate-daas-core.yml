@@ -18,7 +18,7 @@ Resources:
         Entity: !Ref Entity
         Environment: !Sub '${Environment}'
         Name: !Sub '${Entity}-sqs-curate-daas-core-${Environment}'
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sqs/scripts/template/cft-sqs-common-template.yml
+      TemplateURL: ../../daas-common/cft-sqs-common-template.yml
       TimeoutInMinutes: '60'
 
   CreateCurateSQSQueuePolicy:
@@ -42,3 +42,10 @@ Resources:
             Condition:
               ArnLike:
                 'aws:SourceArn': !Sub 'arn:aws:s3:::${Entity}-s3-${AWS::Region}-*-cur-*-${Environment}'
+              StringEquals:
+                'aws:PrincipalOrgID': !Ref OrganizationId
+
+  OrganizationId:
+      Type: 'AWS:CloudFormation::CustomResource'
+      Properties:
+        ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-organization-id-${Environment}

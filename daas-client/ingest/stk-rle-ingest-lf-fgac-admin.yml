@@ -30,7 +30,7 @@ Resources:
         Environment: !Ref Environment
         Name: !Sub ${Entity}-rle-ingest-lf-fgac-admin-${Environment}
         Service: lakeformation.amazonaws.com
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/rle/scripts/template/cft-rle-common-template.yml
+      TemplateURL: ../../daas-common/cft-rle-common-template.yml
       TimeoutInMinutes: '60'
 
   CreateRleLFAccessControlPolicy:

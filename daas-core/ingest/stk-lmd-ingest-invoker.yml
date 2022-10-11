@@ -29,7 +29,7 @@ Resources:
           Fn::ImportValue:
             !Sub "${Entity}-sqs-ingest-daas-core-${Environment}-arn"
         Timeout: 60
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/lmd/scripts/template/cft-lmd-common-template.yml
+      TemplateURL: ../../daas-common/cft-lmd-common-template.yml
       TimeoutInMinutes : '60'
 
   CreateDaaSMetadataInvkPolicy:

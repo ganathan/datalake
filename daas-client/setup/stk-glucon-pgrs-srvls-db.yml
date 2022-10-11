@@ -28,5 +28,5 @@ Resources:
         SubnetId:
           !ImportValue
               'Fn::Sub': '${Entity}-private-subnet-1'
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/glucon/scripts/template/cft-glucon-common-template.yml
+      TemplateURL: ../../daas-common/cft-glucon-common-template.yml
       TimeoutInMinutes: '60'

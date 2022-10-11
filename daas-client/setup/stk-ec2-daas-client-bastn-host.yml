@@ -25,5 +25,5 @@ Resources:
         KeyName: !Ref KeyName
         Name: !Sub '${Entity}-ec2-daas-client-bastn-host-${Environment}'
         Region: !Ref Region
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/ec2/scripts/template/cft-ec2-common-template.yml
+      TemplateURL: ../../daas-common/cft-ec2-common-template.yml
       TimeoutInMinutes: '60'

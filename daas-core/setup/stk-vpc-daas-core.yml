@@ -30,5 +30,5 @@ Resources:
         PublicSubnet1AZ: !Sub ${Region}a
         PublicSubnet2AZ: !Sub ${Region}b
         VpcCidrBlock: 10.1.0.0/16
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/vpc/scripts/template/cft-vpc-common-template.yml
+      TemplateURL: ../../daas-common/cft-vpc-common-template.yml
       TimeoutInMinutes: '60'

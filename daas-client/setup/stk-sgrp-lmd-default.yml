@@ -19,5 +19,5 @@ Resources:
         Entity: !Ref Entity
         Environment: !Ref Environment
         Name: !Sub '${Entity}-sgrp-lmd-default-${Environment}'
-      TemplateURL: !Sub https://s3-${AWS::Region}.amazonaws.com/${Entity}-s3-${AWS::AccountId}-${AWS::Region}-common-artifacts-${Environment}/sgrp/scripts/template/cft-sgrp-common-template.yml
+      TemplateURL: ../../daas-common/cft-sgrp-common-template.yml
       TimeoutInMinutes: '60'
