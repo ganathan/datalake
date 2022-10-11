@@ -4,8 +4,7 @@ accountId=$(aws sts get-caller-identity | jq -r  ".Account")
 entity=$1
 region=$2
 environment=$3
-daasCoreAccountId=$4
-daasCoreEntity=$5
+
 
 deploy_stack(){
     # process the arguments
@@ -78,6 +77,6 @@ then
     # deploy_stack curate sqs curate-daas-core 
     # deploy_stack curate lmd curate-model-generator 1
 else
-    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <account id> <region> <environment>"
+    echo "Missing required parameter. Usage: deploy-stack.sh <entity> <region> <environment>"
 fi
 
