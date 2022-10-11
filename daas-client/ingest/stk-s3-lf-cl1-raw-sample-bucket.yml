@@ -57,15 +57,15 @@ Resources:
               - "s3:PutObjectAcl"
               - "s3:ListBucket"
             Resource:
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}/*
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lf-cl1-raw-sample-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lf-cl1-raw-sample-bucket-${Environment}/*
           - Sid: Deny insecure access
             Effect: Deny
             Principal: "*"
             Action: "*"
             Resource:
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}
-              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}/*
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lf-cl1-raw-sample-bucket-${Environment}
+              - !Sub arn:aws:s3:::${Entity}-s3-${AWS::Region}-lf-cl1-raw-sample-bucket-${Environment}/*
             Condition:
               Bool:
                 "aws:SecureTransport": false
