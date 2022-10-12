@@ -44,16 +44,17 @@ then
 
     deploy_stack setup tag
     deploy_stack setup vpc
-    # sleep 90
-
     deploy_stack setup ngw
+
     deploy_stack setup s3 daas-client-athena-log
-    # sleep 90
+    deploy_stack setup lmd get-security-groups 1
+    deploy_stack setup lmd get-subnet 1
+    deploy_stack setup lmd get-organization-id 1  
 
     # deploy_stack setup sgrp ec2-default
     # deploy_stack setup sgrp rds-pgrs-default
     # deploy_stack setup sgrp lmd-default
-    # sleep 90
+
 
     # Create aurora serverless postgres database manually, take note of username and password
     # Provide the following: DB cluster identifer , Master username , Maseter Password, Min ACU, Max ACU and initial database name to create the db.
