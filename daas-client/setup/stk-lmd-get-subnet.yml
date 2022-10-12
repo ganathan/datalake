@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Fetch the Subnets within the VPC for a given tag and key (DaaS - Core)
+
+Parameters:
+  Entity:
+    Type: String
+    Default: ganesh
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, tst, int, qa, uat, prd, poc]
+  LambdaZipFileName:
+    Type: String
+
+
+Resources:
+  CreateDaaSGetSubnetLambda:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties :
+      Parameters:
+        Description: !Sub Helper lambda to get subnets for a given tag deployed in ${Environment}
+        EnableVpcConfig: False
+        Entity: !Ref Entity
+        Environment: !Ref Environment
+        HandlerName: setup/lmd-get-subnet.lambda_handler
+        LambdaCompressedFileName: !Sub ${LambdaZipFileName}
+        MemorySize: 128
+        Name: !Sub ${Entity}-lmd-get-subnet-${Environment}        
+        Timeout: 120
+      TemplateURL: ../../daas-common/cft-lmd-common-template.yml
+      TimeoutInMinutes : '60'
+
+  CreateDaaSGetSubnetPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles:
+        - !GetAtt CreateDaaSGetSubnetLambda.Outputs.LambdaRole
+      PolicyName: plc-inline-get-sec-grps
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "allowDaaSGetSecGrpRole"
+            Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Resource: 
+              Fn::Sub: "arn:aws:iam::*:role/*-rle-get-subnet-${Environment}"
+          -
+            Sid: "allowEc2Access"
+            Effect: "Allow"
+            Action: "ec2:DescribeSubnets"
+            Resource: "*"
+        
