@@ -30,7 +30,7 @@ then
 
     # Find the current directory to switch to daas-common
     parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
-    if ! echo $parent_path | grep -p "daas-common"; then
+    if ! echo $parent_path | grep -q "daas-common"; then
         current_path="$parent_path/daas-common"
     else
         current_path=$parent_path
@@ -66,7 +66,7 @@ then
 
 
     # Switch back to parent directory
-    if ! echo $parent_path | grep -p "daas-common"; then
+    if ! echo $parent_path | grep -q "daas-common"; then
         cd $parent_path
     fi
     
