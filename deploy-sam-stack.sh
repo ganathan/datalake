@@ -104,8 +104,7 @@ then
         
     elif [ "$serviceType" == "s3" ]
     then
-        echo "inside the s3 service type before sam deploy"
-        if [ ! -z "$s3QueueArn" ]
+        if [[ "$s3QueueArn" == arn:aws:sqs:*  ]]
         then
             # create or update s3 bucket using sam with daas queue arn notification.        
             sam deploy -t $layer/$stackName.yml \
