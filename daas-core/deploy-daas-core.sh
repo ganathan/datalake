@@ -18,11 +18,9 @@ deploy_stack(){
         app="daas-core"
     fi
 
-    echo 'b4 calling deply tmplt'
     # call the common template
     sh ../daas-common/deploy-template.sh $entity $accountId $region $environment $serviceType
 
-    echo 'aftr calling deply tmplt'
     if [ "$serviceType" != "tag" ]
     then
         # call the child stack
