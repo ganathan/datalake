@@ -23,7 +23,7 @@ Conditions:
 
 # Create Resources
 Resources:
-  CreateDaaSRawcl1RawBucket:
+  CreateDaaScl1RawBucket:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
@@ -38,16 +38,13 @@ Resources:
     Type: 'AWS::S3::BucketPolicy'
     DependsOn: CreateDaaScl1RawBucket
     Properties:
-      Bucket: !Sub ${Entity}-s3-${AWS::Region}-lk-cl1-raw-sample-bucket-${Environment}
+      Bucket: !GetAtt CreateDaaScl1RawBucket.Outputs.S3BucketName
       PolicyDocument:
         Statement:
           - Sid: Allow DaaS Core Role access
             Effect: Allow
             Principal: 
-              AWS:
-                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-ingest-invoker-${Environment}
-                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-excel-processor-${Environment}
-                - !Sub arn:aws:iam::${DaasCoreAccountId}:role/rle-${DaasCoreEntity}-lmd-xml-processor-${Environment}
+              AWS: "*"
             Action:
               - "s3:GetObject"
               - "s3:GetBucketPolicy"
@@ -57,8 +54,8 @@ Resources:
               - "s3:PutObjectAcl"
               - "s3:ListBucket"
             Resource:
-              - !Sub arn:aws:s3:::${CreateDaaSRawcl1RawBucket.Outputs.S3BucketName}
-              - !Sub arn:aws:s3:::${CreateDaaSRawcl1RawBucket.Outputs.S3BucketName}/*
+              - !Sub arn:aws:s3:::${CreateDaaScl1RawBucket.Outputs.S3BucketName}
+              - !Sub arn:aws:s3:::${CreateDaaScl1RawBucket.Outputs.S3BucketName}/*
             Condition:
               StringEquals:
                 'aws:PrincipalOrgID': !Ref OrganizationId
@@ -67,13 +64,14 @@ Resources:
             Principal: "*"
             Action: "*"
             Resource:
-              - !Sub arn:aws:s3:::${CreateDaaSRawcl1RawBucket.Outputs.S3BucketName}
-              - !Sub arn:aws:s3:::${CreateDaaSRawcl1RawBucket.Outputs.S3BucketName}/*
+              - !Sub arn:aws:s3:::${CreateDaaScl1RawBucket.Outputs.S3BucketName}
+              - !Sub arn:aws:s3:::${CreateDaaScl1RawBucket.Outputs.S3BucketName}/*
             Condition:
               Bool:
                 "aws:SecureTransport": false
 
   OrganizationId:
-      Type: 'AWS:CloudFormation::CustomResource'
+      Type: 'AWS::CloudFormation::CustomResource'
       Properties:
-        ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-organization-id-${Environment}
+        ServiceToken:
+          Fn::ImportValue: !Sub ${Entity}-lmd-get-organization-id-${Environment}-ARN
