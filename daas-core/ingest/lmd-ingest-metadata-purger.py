@@ -22,7 +22,7 @@ def crawler_exists(glue_client, crawler_name):
         )
         return True
     except glue_client.exceptions.EntityNotFoundException:
-        print(f"crawler {crawler_name} does not exist... ignoring!")
+        logger.error(f"crawler {crawler_name} does not exist... ignoring!")
         return False
 
 # -------------------------------------------------
@@ -35,9 +35,10 @@ def table_exists(glue_client, glue_db_name, dataset):
             DatabaseName=glue_db_name,
             Name=dataset
         )
+        logger.info(f'table {dataset} exists!...')
         return True
     except glue_client.exceptions.EntityNotFoundException:
-        print(f"table {dataset} does not exist... ignoring!")
+        logger.error(f"table {dataset} does not exist... ignoring!")
         return False
         
 # -------------------------------------------------
@@ -67,7 +68,8 @@ def remove_crawler(glue_client, crawler_name):
         logger.info(f'removed crawler {crawler_name}')
         return response
     except Exception as e:
-        return f'Unable to remove crawler {e}'
+        response = f'Unable to remove crawler {e}'
+        return response
 
 
 # -------------------------------------------------
@@ -116,7 +118,9 @@ def get_glue_client(region,target_glue_service_role_arn):
 # Main lambda function
 # -------------------------------------------------
 def lambda_handler(event, context):
-    print(event)
+    
+    json_event = json.dumps(event)
+    logger.info(f'{json_event}')
     try:
         environment = os.environ["ENV_VAR_ENVIRONMENT"]
         account_id = event['account_id']

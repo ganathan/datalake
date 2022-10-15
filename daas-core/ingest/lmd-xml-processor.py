@@ -45,8 +45,9 @@ def convert_xml_to_json(source_bucket, source_key, short_path, domain_name, obje
 # Main lambda function
 # -------------------------------------------------
 def lambda_handler(event, context):
+    json_event = json.dumps(event)
+    logger.info(f'{json_event}')
     try:
-        print(event)
         source_bucket = event['source_bucket']
         source_key = event['source_key']
         domain_name = event['domain_name']
@@ -58,7 +59,7 @@ def lambda_handler(event, context):
             'statusCode': 200
         }
     except Exception as e:
-        print(e)
+        logger.error(f'{e}')
         return {
             'body': json.loads(json.dumps(e, default=str)),
             'statusCode': 400

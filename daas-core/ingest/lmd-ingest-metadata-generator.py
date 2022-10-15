@@ -6,7 +6,10 @@
 import copy
 import json
 import boto3
-    
+import logging    
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # -------------------------------------------------
 # Check if Crawler exits
@@ -177,7 +180,8 @@ def get_glue_client(region,target_glue_service_role_arn):
 # Main lambda function
 # -------------------------------------------------
 def lambda_handler(event, context):
-    print(event)
+    json_event = json.dumps(event)
+    logger.info(f'{json_event}')
     try:
         account_id = event['account_id']
         region = event['region']   
@@ -193,12 +197,12 @@ def lambda_handler(event, context):
         target_glue_service_role_arn='arn:aws:iam::' + account_id + ':role/' + glue_admin_role_name
         glue_client = get_glue_client(region,target_glue_service_role_arn)
         if crawler_exits(glue_client, crawler_name):
-            print(f'{crawler_name} crawler exists! adding partition..')
+            logger.info(f'{crawler_name} crawler exists! adding partition..')
             resp = add_table_partitions(glue_client, glue_db_name, table_name, partitions, partition_values)
         else:
-            print(f'creating crawler {crawler_name}...')
+            logger.info(f'creating crawler {crawler_name}...')
             resp = create_crawler(glue_client, glue_db_name, glue_admin_role_name, crawler_name, domain_name, source_file_path)
-            print(f'starting crawler {crawler_name}...')
+            logger.info(f'starting crawler {crawler_name}...')
             resp = start_crawler(glue_client, crawler_name)
             #create_cloudwatch_event(glue_client, crawler_name, target_lambda_arn, target_lambda_name)
         return {

@@ -256,7 +256,8 @@ def package_parameters(source_bucket, source_key, region, domain_name, commands)
 # -------------------------------------------------
 def lambda_handler(event, context):
     init()
-    print(event)
+    json_event = json.dumps(event)
+    logger.info(f'{json_event}')
     if len(event['Records']) >= 1:
         try:
             for record in json.loads(event['Records'][0]['body'])['Records']:

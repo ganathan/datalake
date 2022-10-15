@@ -1,7 +1,10 @@
 import json
 import boto3
 import os
+import logging
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 # ---------------------------------------------------------------------------
 # get the root command from the command string
 # ---------------------------------------------------------------------------
@@ -130,8 +133,9 @@ def revoke_iam_principals(lf_client, account_id, database_name, table_name):
 # Main lambda function
 # -------------------------------------------------
 def lambda_handler(event, context):
+    json_event = json.dumps(event)
+    logger.info(f'{json_event}')    
     try:
-        print(event)
         database_name = event['database_name']
         account_id = event['account_id']
         region = event['region']
