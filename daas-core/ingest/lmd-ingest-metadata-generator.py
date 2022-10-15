@@ -149,7 +149,7 @@ def create_cloudwatch_event(crawler_name, target_lambda_arn, target_lambda_name)
             StatementId=rule_name,
             Action='lambda:InvokeFunction',
             Principal='events.amazonaws.com',
-            SourceArn=rule_response['RuleArn'],
+            # SourceArn=rule_response['RuleArn'],
         )
         return response
     except Exception as e:

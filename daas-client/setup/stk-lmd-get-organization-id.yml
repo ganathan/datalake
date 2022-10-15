@@ -35,12 +35,12 @@ Resources:
     Properties:
       Roles:
         - !GetAtt CreateDaaSGetOrgIdLambda.Outputs.LambdaRole
-      PolicyName: plc-inline-get-sec-grps
+      PolicyName: plc-inline-get-org-id
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           -
-            Sid: "allowDaaSGetSecGrpRole"
+            Sid: "allowDaaSGetOrgIdRole"
             Effect: "Allow"
             Action: "sts:AssumeRole"
             Resource: 
