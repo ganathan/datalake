@@ -47,6 +47,7 @@ Resources:
                 'aws:PrincipalOrgID': !Ref OrganizationId
 
   OrganizationId:
-      Type: 'AWS:CloudFormation::CustomResource'
+      Type: 'AWS::CloudFormation::CustomResource'
       Properties:
-        ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Entity}-organization-id-${Environment}
+        ServiceToken:
+          Fn::ImportValue: !Sub ${Entity}-lmd-get-organization-id-${Environment}-ARN
